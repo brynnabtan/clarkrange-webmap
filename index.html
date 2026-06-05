@@ -80,6 +80,10 @@ var dsmLayer = L.tileLayer('https://brynnabtan.github.io/clarkrange-webmap/Tiles
     tms: true
 }).addTo(map);
 
+map.on('tileloadstart', function(e) {
+    console.log(e.tile.src);
+});
+
         map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
         // remove popup's row if "visible-with-data"
