@@ -65,25 +65,21 @@
             worldCopyJump: false, 
             zoomControl:false, maxZoom:28, minZoom:8
         }).fitBounds([[36.20271910831722,-84.96251285726701],[36.21650354954398,-84.94641118084012]]);
-var orthoTiles = L.TileLayer.extend({
-    getTileUrl: function(coords) {
-        var y = Math.pow(2, coords.z) - coords.y - 1;
-        return 'Tiles/ortho/' + coords.z + '/' + coords.x + '/' + y + '.png';
-    }
-});
-var orthoLayer = L.tileLayer('Tiles/ortho/{z}/{x}/{y}.png', {
+
+var orthoLayer = L.tileLayer('https://brynnabtan.github.io/clarkrange-webmap/Tiles/ortho/{z}/{x}/{y}.png', {
     minZoom: 1,
     maxZoom: 22,
     opacity: 1,
     tms: true
 }).addTo(map);
 
-var dsmLayer = L.tileLayer('Tiles/dsm/{z}/{x}/{y}.png', {
+var dsmLayer = L.tileLayer('https://brynnabtan.github.io/clarkrange-webmap/Tiles/dsm/{z}/{x}/{y}.png', {
     minZoom: 1,
     maxZoom: 22,
     opacity: 0.6,
     tms: true
 }).addTo(map);
+
         map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
         // remove popup's row if "visible-with-data"
