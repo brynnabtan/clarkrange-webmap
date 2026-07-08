@@ -42,11 +42,27 @@
     padding: 0;
 }
 
+#company-logo {
+    position: absolute;
+    bottom: 10px;   /* adjust position */
+    left: 10px;     /* or right: 10px */
+    z-index: 10;
+}
+
+#company-logo img {
+    width: 140px;   /* adjust size */
+    opacity: 0.95;  /* optional */
+}
 
     </style>
 </head>
 <body>
 <div id="map"></div>
+
+<div id="company-logo">
+    <img src="https://drive.google.com/uc?export=view&id=1x0pML69YnfCRGqZOnLTrq4DHJ5KnTpVu" alt="Company Logo">
+</div>
+
 
 <div id="legend" class="map-legend">
     <div id="legend-header" class="legend-title">Legend ▼</div>
