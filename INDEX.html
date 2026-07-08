@@ -44,15 +44,18 @@
 
 #company-logo {
     position: absolute;
-    bottom: 10px;   /* adjust position */
-    left: 10px;     /* or right: 10px */
+    top: 10px;      /* moved from bottom → top */
+    left: 10px;     /* stays left */
     z-index: 10;
 }
 
 #company-logo img {
-    width: 140px;   /* adjust size */
-    opacity: 0.95;  /* optional */
+    width: 180px;      /* adjust size as needed */
+    height: auto;
+    object-fit: contain;
+    opacity: 0.95;
 }
+
 
     </style>
 </head>
@@ -106,7 +109,6 @@
         <label class="toggle-item"><input type="checkbox" id="chk-drone-images" checked onchange="toggleLayer('UAV-Derived Drone Images - 04-24-2026', this)">
 
     <script>
-
         mapboxgl.accessToken = 'pk.eyJ1IjoiYnJ5bm5hYnRhbiIsImEiOiJjbXJjNGZvdXgwMG5vMzBxM3JpYXRoZXN3In0.4G5a69c71gdjvW80QexbwA';
         
         const map = new mapboxgl.Map({
@@ -242,6 +244,11 @@ document.getElementById('legend-header').addEventListener('click', () => {
     const isCollapsed = content.classList.toggle('collapsed');
     header.textContent = isCollapsed ? 'Legend ▲' : 'Legend ▼';
 });
+
+
+<div id="company-logo">
+    <img src="https://drive.google.com/uc?export=view&id=1x0pML69YnfCRGqZOnLTrq4DHJ5KnTpVu" alt="Company Logo">
+</div>
 
     </script>
 </body>
