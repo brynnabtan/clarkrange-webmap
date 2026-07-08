@@ -24,13 +24,33 @@
         .legend-key.point { border-radius: 50%; width: 10px; height: 10px; margin-left: 3px; margin-right: 11px; }
         .legend-key.raster-box { width: 14px; height: 14px; border: 1px dashed #555; background: repeating-linear-gradient(45deg, #ccc, #ccc 2px, #fff 2px, #fff 4px); }
         .legend-key.caret { background: none !important; border: none !important; font-weight: bold; font-size: 16px; line-height: 16px; text-align: center; color: #000000; margin-right: 8px; }
+       
+        /* --- Collapsible Legend Add-on --- */
+#legend-header {
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 6px;
+}
+
+#legend-content {
+    transition: max-height 0.25s ease-out;
+    overflow: hidden;
+    max-height: 500px; /* expanded */
+}
+
+#legend-content.collapsed {
+    max-height: 0;
+    padding: 0;
+}
+
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div id="legend" class="map-legend">
-        <div class="legend-title">Legend</div>
-        <!-- Toggle controls remain the same -->
+        <div id="legend-header" class="legend-title">Legend ▼</div>
+        <div id="legend-content"></div>
         <div class="legend-section">Background Imagery</div>
         <label class="toggle-item"><input type="checkbox" id="chk-ortho" checked onchange="toggleLayer('Drone Orthomosaic', this)"><span class="legend-key raster-box"></span>Drone Orthomosaic</label>
         <label class="toggle-item"><input type="checkbox" id="chk-dsm" checked onchange="toggleLayer('Digital Surface Model (DSM)', this)"><span class="legend-key raster-box" style="background: repeating-linear-gradient(-45deg, #888, #888 2px, #eee 2px, #eee 4px);"></span>Digital Surface Model (DSM)</label>
@@ -136,9 +156,6 @@ const droneDisplayNames = ['Drone Images', 'Highlighted Drone Images of Sub-Opti
                             html += `<p>No image available for this location.</p>`;
                         }
 
-                        // Optional: Add other data from properties
-                        html += `<p style="font-size:11px; color:#666;">ID: ${props.id || 'N/A'}</p>`;
-
                         new mapboxgl.Popup()
                             .setLngLat(e.lngLat)
                             .setHTML(html)
@@ -151,6 +168,13 @@ const droneDisplayNames = ['Drone Images', 'Highlighted Drone Images of Sub-Opti
                 }
             });
         });
+document.getElementById('legend-header').addEventListener('click', () => {
+    const content = document.getElementById('legend-content');
+    const header = document.getElementById('legend-header');
+
+    const isCollapsed = content.classList.toggle('collapsed');
+    header.textContent = isCollapsed ? 'Legend ▲' : 'Legend ▼';
+});
 
     </script>
 </body>
