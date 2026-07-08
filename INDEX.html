@@ -118,40 +118,39 @@
                     });
                 }
             });
-        });
 const droneDisplayNames = ['Drone Images', 'Highlighted Drone Images of Sub-Optimal Soil Area'];
 
-droneDisplayNames.forEach(displayName => {
-    // Check if the layer exists in the map style
-    if (map.getLayer(displayName)) {
-        map.on('click', displayName, (e) => {
-            const props = e.features[0].properties;
-            const imageUrl = props.PhotoURL_1; // Access your specific column name
+            droneDisplayNames.forEach(displayName => {
+                // Check if the layer exists in the map style
+                if (map.getLayer(displayName)) {
+                    map.on('click', displayName, (e) => {
+                        const props = e.features[0].properties;
+                        const imageUrl = props.PhotoURL_1; // Access your specific column name
 
-            // Build the HTML for the popup
-            let html = `<h3>Drone Imagery</h3>`;
-            
-            if (imageUrl) {
-                html += `<img src="${imageUrl}" style="width:100%; height:auto; border-radius:4px; margin-bottom:8px;">`;
-            } else {
-                html += `<p>No image available for this location.</p>`;
-            }
+                        // Build the HTML for the popup
+                        let html = `<h3>Drone Imagery</h3>`;
+                        
+                        if (imageUrl) {
+                            html += `<img src="${imageUrl}" style="width:100%; height:auto; border-radius:4px; margin-bottom:8px;">`;
+                        } else {
+                            html += `<p>No image available for this location.</p>`;
+                        }
 
-            // Optional: Add other data from properties
-            html += `<p style="font-size:11px; color:#666;">ID: ${props.id || 'N/A'}</p>`;
+                        // Optional: Add other data from properties
+                        html += `<p style="font-size:11px; color:#666;">ID: ${props.id || 'N/A'}</p>`;
 
-            new mapboxgl.Popup()
-                .setLngLat(e.lngLat)
-                .setHTML(html)
-                .addTo(map);
+                        new mapboxgl.Popup()
+                            .setLngLat(e.lngLat)
+                            .setHTML(html)
+                            .addTo(map);
+                    });
+
+                    // Maintain cursor interactivity
+                    map.on('mouseenter', displayName, () => map.getCanvas().style.cursor = 'pointer');
+                    map.on('mouseleave', displayName, () => map.getCanvas().style.cursor = '');
+                }
+            });
         });
-
-        // Maintain cursor interactivity
-        map.on('mouseenter', displayName, () => map.getCanvas().style.cursor = 'pointer');
-        map.on('mouseleave', displayName, () => map.getCanvas().style.cursor = '');
-    }
-});
-
 
     </script>
 </body>
