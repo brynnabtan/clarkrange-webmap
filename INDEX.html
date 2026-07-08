@@ -118,33 +118,26 @@
                     });
                 }
             });
-        });
 
-const droneDisplayNames = ['Drone Images', 'Highlighted Drone Images of Sub-Optimal Soil Area'];
+            const droneDisplayNames = ['Drone Images', 'Highlighted Drone Images of Sub-Optimal Soil Area'];
 
-droneDisplayNames.forEach(displayName => {
-    // Find the layer object that matches this display name
-    const layer = map.getStyle().layers.find(l => l.id === displayName);
-    
-    if (layer) {
-        map.on('click', layer.id, (e) => {
-            alert("Clicked!");
-            console.log(e.features[0].properties);
+            // Attach click handlers for drone layers if they exist in the style
+            droneDisplayNames.forEach(displayName => {
+                const layer = map.getStyle().layers.find(l => l.id === displayName);
+                if (layer) {
+                    map.on('click', layer.id, (e) => {
+                        // simple debug action - replace with desired behavior
+                        alert('Clicked!');
+                        console.log(e.features[0].properties);
+                    });
+                    // change cursor on hover for these layers
+                    map.on('mouseenter', layer.id, () => map.getCanvas().style.cursor = 'pointer');
+                    map.on('mouseleave', layer.id, () => map.getCanvas().style.cursor = '');
+                } else {
+                    console.log('Could not find layer with ID: ' + displayName);
+                }
+            });
         });
-    } else {
-        console.log("Could not find layer with ID: " + displayName);
-    }
-});
-
-        // This makes sure your mouse turns into a pointer finger when hovering over the dots
-        map.on('mouseenter', layerId, () => {
-            map.getCanvas().style.cursor = 'pointer';
-        });
-        map.on('mouseleave', layerId, () => {
-            map.getCanvas().style.cursor = '';
-        });
-    }
-});
 
 
     </script>
