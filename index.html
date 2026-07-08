@@ -120,23 +120,21 @@
             });
         });
 
-const droneLayers = ['c487c26aa110c2478552', '1d0cd03f955b9bd6c3aa'];
+const droneDisplayNames = ['Drone Images', 'Highlighted Drone Images of Sub-Optimal Soil Area'];
 
-droneLayers.forEach(layerId => {
-    if (map.getLayer(layerId)) {
-        map.on('click', layerId, (e) => {
-            const feature = e.features[0];
-            
-            // Pulls the link specifically from your PhotoURL_1 column
-            const imageUrl = feature.properties.PhotoURL_1; 
-
-            if (imageUrl) {
-                new mapboxgl.Popup({ maxWidth: '400px' }) 
-                    .setLngLat(e.lngLat)
-                    .setHTML(`<img src="${imageUrl}" style="width:100%; height:auto; border-radius:4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">`)
-                    .addTo(map);
-            }
+droneDisplayNames.forEach(displayName => {
+    // Find the layer object that matches this display name
+    const layer = map.getStyle().layers.find(l => l.id === displayName);
+    
+    if (layer) {
+        map.on('click', layer.id, (e) => {
+            alert("Clicked!");
+            console.log(e.features[0].properties);
         });
+    } else {
+        console.log("Could not find layer with ID: " + displayName);
+    }
+});
 
         // This makes sure your mouse turns into a pointer finger when hovering over the dots
         map.on('mouseenter', layerId, () => {
