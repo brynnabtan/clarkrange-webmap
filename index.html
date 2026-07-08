@@ -102,32 +102,59 @@
             // Note: Rasters are NOT added via code here. 
             // Ensure they are ordered correctly in your Mapbox Studio style.
 
-            const hoverConfigs = [
-                { layerId: '25ft Buffer Around Water Bodies', stateKey: 'Highlight Color Water' },
-                { layerId: 'Drone Images', stateKey: 'Highlight Color Drone' },
-                { layerId: 'Sub-Optimal Soil Area', stateKey: 'Highlight Color Sub-Opt SA' },
-                { layerId: 'Hydric Soil Area', stateKey: 'Highlight Color Hydric SA' },
-                { layerId: 'Test Soil Area', stateKey: 'Highlight Color Test SA' }
-            ];
+            // --- FIXED HOVER CONFIG (no more stuck highlights!) ---
+const hoverConfigs = [
+    { layerId: '25ft Buffer Around Water Bodies', stateKey: 'Highlight Color Water' },
+    { layerId: 'Drone Images', stateKey: 'Highlight Color Drone' },
+    { layerId: 'Sub-Optimal Soil Area', stateKey: 'Highlight Color Sub-Opt SA' },
+    { layerId: 'Hydric Soil Area', stateKey: 'Highlight Color Hydric SA' },
+    { layerId: 'Test Soil Area', stateKey: 'Highlight Color Test SA' }
+];
 
-            let activeFeature = null;
-            hoverConfigs.forEach(config => {
-                map.on('mousemove', config.layerId, (e) => {
-                    if (e.features.length > 0) {
-                        if (activeFeature) map.setFeatureState({ source: activeFeature.source, sourceLayer: activeFeature.sourceLayer, id: activeFeature.id }, { [config.stateKey]: false });
-                        activeFeature = e.features[0];
-                        map.setFeatureState({ source: activeFeature.source, sourceLayer: activeFeature.sourceLayer, id: activeFeature.id }, { [config.stateKey]: true });
-                        map.getCanvas().style.cursor = 'pointer';
-                    }
-                });
-                map.on('mouseleave', config.layerId, () => {
-                    if (activeFeature) {
-                        map.setFeatureState({ source: activeFeature.source, sourceLayer: activeFeature.sourceLayer, id: activeFeature.id }, { [config.stateKey]: false });
-                        activeFeature = null;
-                        map.getCanvas().style.cursor = '';
-                    }
-                });
-            });
+// Track active feature *per layer* instead of globally
+const activeFeatures = {};
+
+hoverConfigs.forEach(config => {
+    map.on('mousemove', config.layerId, (e) => {
+        if (!e.features.length) return;
+
+        const prev = activeFeatures[config.layerId];
+        const current = e.features[0];
+
+        // Turn OFF previous highlight for this layer
+        if (prev) {
+            map.setFeatureState(
+                { source: prev.source, sourceLayer: prev.sourceLayer, id: prev.id },
+                { [config.stateKey]: false }
+            );
+        }
+
+        // Turn ON new highlight
+        map.setFeatureState(
+            { source: current.source, sourceLayer: current.sourceLayer, id: current.id },
+            { [config.stateKey]: true }
+        );
+
+        activeFeatures[config.layerId] = current;
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', config.layerId, () => {
+        const prev = activeFeatures[config.layerId];
+
+        // Turn OFF highlight when leaving the layer
+        if (prev) {
+            map.setFeatureState(
+                { source: prev.source, sourceLayer: prev.sourceLayer, id: prev.id },
+                { [config.stateKey]: false }
+            );
+        }
+
+        activeFeatures[config.layerId] = null;
+        map.getCanvas().style.cursor = '';
+    });
+});
+
 
             // Click interaction
             const vectorLayers = ['Test Soil Area', 'Hydric Soil Area', 'Sub-Optimal Soil Area', '25ft Buffer Around Water Bodies', 'Water Body', 'Boulder', 'Property Boundary', 'Surrounding Parcels', 'Stream'];
