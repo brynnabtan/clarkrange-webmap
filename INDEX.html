@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -29,6 +30,7 @@
     <div id="map"></div>
     <div id="legend" class="map-legend">
         <div class="legend-title">Legend</div>
+        <!-- Toggle controls remain the same -->
         <div class="legend-section">Background Imagery</div>
         <label class="toggle-item"><input type="checkbox" id="chk-ortho" checked onchange="toggleLayer('Drone Orthomosaic', this)"><span class="legend-key raster-box"></span>Drone Orthomosaic</label>
         <label class="toggle-item"><input type="checkbox" id="chk-dsm" checked onchange="toggleLayer('Digital Surface Model (DSM)', this)"><span class="legend-key raster-box" style="background: repeating-linear-gradient(-45deg, #888, #888 2px, #eee 2px, #eee 4px);"></span>Digital Surface Model (DSM)</label>
@@ -50,7 +52,9 @@
     </div>
 
     <script>
+
         mapboxgl.accessToken = 'pk.eyJ1IjoiYnJ5bm5hYnRhbiIsImEiOiJjbXJjNGZvdXgwMG5vMzBxM3JpYXRoZXN3In0.4G5a69c71gdjvW80QexbwA';
+        
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/brynnabtan/cmqf4c9o300ba01s3at7x556r',
@@ -59,28 +63,27 @@
         });
 
         function toggleLayer(layerId, checkboxElement) {
-            if (!map.getLayer(layerId)) return;
-            map.setLayoutProperty(layerId, 'visibility', checkboxElement.checked ? 'visible' : 'none');
+            if (map.getLayer(layerId)) {
+                map.setLayoutProperty(layerId, 'visibility', checkboxElement.checked ? 'visible' : 'none');
+            }
         }
+
         function toggleGroup(layerIds, checkboxElement) {
-            layerIds.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', checkboxElement.checked ? 'visible' : 'none'); });
+            layerIds.forEach(id => {
+                if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', checkboxElement.checked ? 'visible' : 'none');
+            });
         }
 
         map.on('load', () => {
-            map.addSource('ortho-source', { type: 'raster', url: 'mapbox://brynnabtan.pcl7a2' });
-            map.addSource('dsm-source', { type: 'raster', url: 'mapbox://brynnabtan.qb835z' });
-
-            // Add rasters before the first layer in the style to ensure they are at the bottom
-            const firstLayerId = map.getStyle().layers[0].id;
-            map.addLayer({ id: 'Digital Surface Model (DSM)', type: 'raster', source: 'dsm-source' }, firstLayerId);
-            map.addLayer({ id: 'Drone Orthomosaic', type: 'raster', source: 'ortho-source' }, firstLayerId);
+            // Note: Rasters are NOT added via code here. 
+            // Ensure they are ordered correctly in your Mapbox Studio style.
 
             const hoverConfigs = [
-                { layerId: '25ft Buffer Around Water Bodies', stateKey: 'Highlight Color Water', source: 'brynnabtan.6cj7unzp9z0v', srcLayer: 'e6e28e0e44d08c8cca5a' },
-                { layerId: 'Drone Images', stateKey: 'Highlight Color Drone', source: 'brynnabtan.6cj7unzp9z0v', srcLayer: 'c487c26aa110c2478552' },
-                { layerId: 'Sub-Optimal Soil Area', stateKey: 'Highlight Color Sub-Opt SA', source: 'brynnabtan.6cj7unzp9z0v', srcLayer: '4d987916bb6a0276b2dd' },
-                { layerId: 'Hydric Soil Area', stateKey: 'Highlight Color Hydric SA', source: 'brynnabtan.6cj7unzp9z0v', srcLayer: '00565734408b50f539e7' },
-                { layerId: 'Test Soil Area', stateKey: 'Highlight Color Test SA', source: 'brynnabtan.jt6b1o23hve6', srcLayer: 'c8d2af25732941154523' }
+                { layerId: '25ft Buffer Around Water Bodies', stateKey: 'Highlight Color Water' },
+                { layerId: 'Drone Images', stateKey: 'Highlight Color Drone' },
+                { layerId: 'Sub-Optimal Soil Area', stateKey: 'Highlight Color Sub-Opt SA' },
+                { layerId: 'Hydric Soil Area', stateKey: 'Highlight Color Hydric SA' },
+                { layerId: 'Test Soil Area', stateKey: 'Highlight Color Test SA' }
             ];
 
             let activeFeature = null;
@@ -89,7 +92,7 @@
                     if (e.features.length > 0) {
                         if (activeFeature) map.setFeatureState({ source: activeFeature.source, sourceLayer: activeFeature.sourceLayer, id: activeFeature.id }, { [config.stateKey]: false });
                         activeFeature = e.features[0];
-                        map.setFeatureState({ source: config.source, sourceLayer: config.srcLayer, id: activeFeature.id }, { [config.stateKey]: true });
+                        map.setFeatureState({ source: activeFeature.source, sourceLayer: activeFeature.sourceLayer, id: activeFeature.id }, { [config.stateKey]: true });
                         map.getCanvas().style.cursor = 'pointer';
                     }
                 });
@@ -102,6 +105,7 @@
                 });
             });
 
+            // Click interaction
             const vectorLayers = ['Test Soil Area', 'Hydric Soil Area', 'Sub-Optimal Soil Area', '25ft Buffer Around Water Bodies', 'Water Body', 'Boulder', 'Property Boundary', 'Surrounding Parcels', 'Stream'];
             vectorLayers.forEach(layerId => {
                 if (map.getLayer(layerId)) {
@@ -115,6 +119,36 @@
                 }
             });
         });
+
+const droneLayers = ['c487c26aa110c2478552', '1d0cd03f955b9bd6c3aa'];
+
+droneLayers.forEach(layerId => {
+    if (map.getLayer(layerId)) {
+        map.on('click', layerId, (e) => {
+            const feature = e.features[0];
+            
+            // Pulls the link specifically from your PhotoURL_1 column
+            const imageUrl = feature.properties.PhotoURL_1; 
+
+            if (imageUrl) {
+                new mapboxgl.Popup({ maxWidth: '400px' }) 
+                    .setLngLat(e.lngLat)
+                    .setHTML(`<img src="${imageUrl}" style="width:100%; height:auto; border-radius:4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">`)
+                    .addTo(map);
+            }
+        });
+
+        // This makes sure your mouse turns into a pointer finger when hovering over the dots
+        map.on('mouseenter', layerId, () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        map.on('mouseleave', layerId, () => {
+            map.getCanvas().style.cursor = '';
+        });
+    }
+});
+
+
     </script>
 </body>
 </html>
