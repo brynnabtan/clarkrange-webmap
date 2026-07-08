@@ -1,0 +1,120 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Clarkrange Map</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.js"></script>
+    <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%; }
+        .mapboxgl-popup { max-width: 350px !important; }
+        .popup-table { width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 11px; margin-top: 8px; }
+        .popup-table th, .popup-table td { padding: 5px 6px; text-align: left; border-bottom: 1px solid #ddd; }
+        .popup-table th { background-color: #f4f4f4; font-weight: bold; color: #333; }
+        .popup-table tr:nth-child(even) { background-color: #fafafa; }
+        .map-legend { position: absolute; bottom: 30px; right: 10px; z-index: 1; background: rgba(255, 255, 255, 0.95); padding: 12px; border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: #333; max-width: 240px; max-height: 85vh; overflow-y: auto; }
+        .legend-title { font-weight: bold; margin-bottom: 6px; font-size: 13px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+        .legend-section { font-weight: bold; font-size: 10px; text-transform: uppercase; color: #777; margin-top: 8px; margin-bottom: 4px; }
+        .toggle-item { display: flex; align-items: center; margin-bottom: 4px; cursor: pointer; }
+        .toggle-item input { margin-right: 8px; cursor: pointer; }
+        .legend-key { display: inline-block; width: 16px; height: 16px; margin-right: 8px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.2); flex-shrink: 0; }
+        .legend-key.line { height: 3px; border-radius: 0; }
+        .legend-key.point { border-radius: 50%; width: 10px; height: 10px; margin-left: 3px; margin-right: 11px; }
+        .legend-key.raster-box { width: 14px; height: 14px; border: 1px dashed #555; background: repeating-linear-gradient(45deg, #ccc, #ccc 2px, #fff 2px, #fff 4px); }
+        .legend-key.caret { background: none !important; border: none !important; font-weight: bold; font-size: 16px; line-height: 16px; text-align: center; color: #000000; margin-right: 8px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="legend" class="map-legend">
+        <div class="legend-title">Legend</div>
+        <div class="legend-section">Background Imagery</div>
+        <label class="toggle-item"><input type="checkbox" id="chk-ortho" checked onchange="toggleLayer('Drone Orthomosaic', this)"><span class="legend-key raster-box"></span>Drone Orthomosaic</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-dsm" checked onchange="toggleLayer('Digital Surface Model (DSM)', this)"><span class="legend-key raster-box" style="background: repeating-linear-gradient(-45deg, #888, #888 2px, #eee 2px, #eee 4px);"></span>Digital Surface Model (DSM)</label>
+        <div class="legend-section">Soil Assessment</div>
+        <label class="toggle-item"><input type="checkbox" id="chk-test-soil" checked onchange="toggleLayer('Test Soil Area', this)"><span class="legend-key" style="background-color: #23852a;"></span>Test Soil Area</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-hydric-soil" checked onchange="toggleLayer('Hydric Soil Area', this)"><span class="legend-key" style="background-color: #53ccff;"></span>Hydric Soil Area</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-suboptimal-soil" checked onchange="toggleLayer('Sub-Optimal Soil Area', this)"><span class="legend-key" style="background-color: #bb35b6;"></span>Sub-Optimal Soil Area</label>
+        <div class="legend-section">Environmental & Boundaries</div>
+        <label class="toggle-item"><input type="checkbox" id="chk-property" checked onchange="toggleLayer('Property Boundary', this)"><span class="legend-key line" style="background-color: #000000;"></span>Property Boundary</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-stream" checked onchange="toggleLayer('Stream', this)"><span class="legend-key line" style="background-color: #017bf2;"></span>Stream</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-buffer" checked onchange="toggleLayer('25ft Buffer Around Water Bodies', this)"><span class="legend-key" style="background-color: #54a2cf; opacity: 0.4;"></span>25ft Water Buffer</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-waterbody" checked onchange="toggleLayer('Water Body', this)"><span class="legend-key" style="background-color: #5da8fe;"></span>Water Body</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-contours" checked onchange="toggleGroup(['5ft Interval Contours', 'Contour Labels'], this)"><span class="legend-key line" style="background-color: #000000;"></span>5ft Interval Contours</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-parcels" checked onchange="toggleLayer('Surrounding Parcels', this)"><span class="legend-key line" style="background-color: #ffffff; border-style: dashed;"></span>Surrounding Parcels</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-boulder" checked onchange="toggleLayer('Boulder', this)"><span class="legend-key caret">^</span>Boulder</label>
+        <div class="legend-section">Survey Imagery</div>
+        <label class="toggle-item"><input type="checkbox" id="chk-drone-images" checked onchange="toggleLayer('Drone Images', this)"><span class="legend-key point" style="background-color: #000000; border: 1px solid #000000;"></span>Drone Images</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-drone-highlight" checked onchange="toggleLayer('Highlighted Drone Images of Sub-Optimal Soil Area', this)"><span class="legend-key point" style="background-color: #FFD700; border: 1px solid #FF4500;"></span>Highlighted Drone Locations</label>
+    </div>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYnJ5bm5hYnRhbiIsImEiOiJjbXJjNGZvdXgwMG5vMzBxM3JpYXRoZXN3In0.4G5a69c71gdjvW80QexbwA';
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/brynnabtan/cmqf4c9o300ba01s3at7x556r',
+            center: [-84.954, 36.210],
+            zoom: 15.11
+        });
+
+        function toggleLayer(layerId, checkboxElement) {
+            if (!map.getLayer(layerId)) return;
+            map.setLayoutProperty(layerId, 'visibility', checkboxElement.checked ? 'visible' : 'none');
+        }
+        function toggleGroup(layerIds, checkboxElement) {
+            layerIds.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', checkboxElement.checked ? 'visible' : 'none'); });
+        }
+
+        map.on('load', () => {
+            map.addSource('ortho-source', { type: 'raster', url: 'mapbox://brynnabtan.pcl7a2' });
+            map.addSource('dsm-source', { type: 'raster', url: 'mapbox://brynnabtan.qb835z' });
+
+            // Add rasters before the first layer in the style to ensure they are at the bottom
+            const firstLayerId = map.getStyle().layers[0].id;
+            map.addLayer({ id: 'Digital Surface Model (DSM)', type: 'raster', source: 'dsm-source' }, firstLayerId);
+            map.addLayer({ id: 'Drone Orthomosaic', type: 'raster', source: 'ortho-source' }, firstLayerId);
+
+            const hoverConfigs = [
+                { layerId: '25ft Buffer Around Water Bodies', stateKey: 'Highlight Color Water', source: 'brynnabtan.6cj7unzp9z0v', srcLayer: 'e6e28e0e44d08c8cca5a' },
+                { layerId: 'Drone Images', stateKey: 'Highlight Color Drone', source: 'brynnabtan.6cj7unzp9z0v', srcLayer: 'c487c26aa110c2478552' },
+                { layerId: 'Sub-Optimal Soil Area', stateKey: 'Highlight Color Sub-Opt SA', source: 'brynnabtan.6cj7unzp9z0v', srcLayer: '4d987916bb6a0276b2dd' },
+                { layerId: 'Hydric Soil Area', stateKey: 'Highlight Color Hydric SA', source: 'brynnabtan.6cj7unzp9z0v', srcLayer: '00565734408b50f539e7' },
+                { layerId: 'Test Soil Area', stateKey: 'Highlight Color Test SA', source: 'brynnabtan.jt6b1o23hve6', srcLayer: 'c8d2af25732941154523' }
+            ];
+
+            let activeFeature = null;
+            hoverConfigs.forEach(config => {
+                map.on('mousemove', config.layerId, (e) => {
+                    if (e.features.length > 0) {
+                        if (activeFeature) map.setFeatureState({ source: activeFeature.source, sourceLayer: activeFeature.sourceLayer, id: activeFeature.id }, { [config.stateKey]: false });
+                        activeFeature = e.features[0];
+                        map.setFeatureState({ source: config.source, sourceLayer: config.srcLayer, id: activeFeature.id }, { [config.stateKey]: true });
+                        map.getCanvas().style.cursor = 'pointer';
+                    }
+                });
+                map.on('mouseleave', config.layerId, () => {
+                    if (activeFeature) {
+                        map.setFeatureState({ source: activeFeature.source, sourceLayer: activeFeature.sourceLayer, id: activeFeature.id }, { [config.stateKey]: false });
+                        activeFeature = null;
+                        map.getCanvas().style.cursor = '';
+                    }
+                });
+            });
+
+            const vectorLayers = ['Test Soil Area', 'Hydric Soil Area', 'Sub-Optimal Soil Area', '25ft Buffer Around Water Bodies', 'Water Body', 'Boulder', 'Property Boundary', 'Surrounding Parcels', 'Stream'];
+            vectorLayers.forEach(layerId => {
+                if (map.getLayer(layerId)) {
+                    map.on('click', layerId, (e) => {
+                        const props = e.features[0].properties;
+                        let html = `<h3>${layerId}</h3><table class="popup-table">`;
+                        for (const [k, v] of Object.entries(props)) html += `<tr><td>${k}</td><td>${v}</td></tr>`;
+                        html += `</table>`;
+                        new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
