@@ -86,11 +86,17 @@
             zoom: 15.11
         });
 
-        function toggleLayer(layerId, checkboxElement) {
-            if (map.getLayer(layerId)) {
-                map.setLayoutProperty(layerId, 'visibility', checkboxElement.checked ? 'visible' : 'none');
-            }
-        }
+       function toggleLayer(layerId, checkboxElement) {
+    const visibility = checkboxElement.checked ? 'visible' : 'none';
+
+    if (!map.getLayer(layerId)) {
+        console.warn(`Layer not found: ${layerId}`);
+        return;
+    }
+
+    map.setLayoutProperty(layerId, 'visibility', visibility);
+}
+
 
         function toggleGroup(layerIds, checkboxElement) {
             layerIds.forEach(id => {
