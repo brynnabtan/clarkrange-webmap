@@ -24,19 +24,17 @@
         .legend-key.point { border-radius: 50%; width: 10px; height: 10px; margin-left: 3px; margin-right: 11px; }
         .legend-key.raster-box { width: 14px; height: 14px; border: 1px dashed #555; background: repeating-linear-gradient(45deg, #ccc, #ccc 2px, #fff 2px, #fff 4px); }
         .legend-key.caret { background: none !important; border: none !important; font-weight: bold; font-size: 16px; line-height: 16px; text-align: center; color: #000000; margin-right: 8px; }
-       
-        /* --- Collapsible Legend Add-on --- */
-#legend-header {
-    font-weight: bold;
+
+
+        #legend-header {
     cursor: pointer;
     user-select: none;
-    margin-bottom: 6px;
 }
 
 #legend-content {
     transition: max-height 0.25s ease-out;
     overflow: hidden;
-    max-height: 500px; /* expanded */
+    max-height: 600px;
 }
 
 #legend-content.collapsed {
@@ -44,20 +42,27 @@
     padding: 0;
 }
 
+
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div id="legend" class="map-legend">
-        <div id="legend-header" class="legend-title">Legend ▼</div>
-        <div id="legend-content"></div>
+<div id="map"></div>
+
+<div id="legend" class="map-legend">
+    <div id="legend-header" class="legend-title">Legend ▼</div>
+
+    <!-- EVERYTHING collapses inside this wrapper -->
+    <div id="legend-content">
+
         <div class="legend-section">Background Imagery</div>
         <label class="toggle-item"><input type="checkbox" id="chk-ortho" checked onchange="toggleLayer('Drone Orthomosaic', this)"><span class="legend-key raster-box"></span>Drone Orthomosaic</label>
         <label class="toggle-item"><input type="checkbox" id="chk-dsm" checked onchange="toggleLayer('Digital Surface Model (DSM)', this)"><span class="legend-key raster-box" style="background: repeating-linear-gradient(-45deg, #888, #888 2px, #eee 2px, #eee 4px);"></span>Digital Surface Model (DSM)</label>
+
         <div class="legend-section">Soil Assessment</div>
         <label class="toggle-item"><input type="checkbox" id="chk-test-soil" checked onchange="toggleLayer('Test Soil Area', this)"><span class="legend-key" style="background-color: #23852a;"></span>Test Soil Area</label>
         <label class="toggle-item"><input type="checkbox" id="chk-hydric-soil" checked onchange="toggleLayer('Hydric Soil Area', this)"><span class="legend-key" style="background-color: #53ccff;"></span>Hydric Soil Area</label>
         <label class="toggle-item"><input type="checkbox" id="chk-suboptimal-soil" checked onchange="toggleLayer('Sub-Optimal Soil Area', this)"><span class="legend-key" style="background-color: #bb35b6;"></span>Sub-Optimal Soil Area</label>
+
         <div class="legend-section">Environmental & Boundaries</div>
         <label class="toggle-item"><input type="checkbox" id="chk-property" checked onchange="toggleLayer('Property Boundary', this)"><span class="legend-key line" style="background-color: #000000;"></span>Property Boundary</label>
         <label class="toggle-item"><input type="checkbox" id="chk-stream" checked onchange="toggleLayer('Stream', this)"><span class="legend-key line" style="background-color: #017bf2;"></span>Stream</label>
@@ -66,10 +71,9 @@
         <label class="toggle-item"><input type="checkbox" id="chk-contours" checked onchange="toggleGroup(['5ft Interval Contours', 'Contour Labels'], this)"><span class="legend-key line" style="background-color: #000000;"></span>5ft Interval Contours</label>
         <label class="toggle-item"><input type="checkbox" id="chk-parcels" checked onchange="toggleLayer('Surrounding Parcels', this)"><span class="legend-key line" style="background-color: #ffffff; border-style: dashed;"></span>Surrounding Parcels</label>
         <label class="toggle-item"><input type="checkbox" id="chk-boulder" checked onchange="toggleLayer('Boulder', this)"><span class="legend-key caret">^</span>Boulder</label>
+
         <div class="legend-section">Survey Imagery</div>
-        <label class="toggle-item"><input type="checkbox" id="chk-drone-images" checked onchange="toggleLayer('Drone Images', this)"><span class="legend-key point" style="background-color: #000000; border: 1px solid #000000;"></span>Drone Images</label>
-        <label class="toggle-item"><input type="checkbox" id="chk-drone-highlight" checked onchange="toggleLayer('Highlighted Drone Images of Sub-Optimal Soil Area', this)"><span class="legend-key point" style="background-color: #FFD700; border: 1px solid #FF4500;"></span>Highlighted Drone Locations</label>
-    </div>
+        <label class="toggle-item"><input type="checkbox" id="chk-drone-images" checked onchange="toggleLayer('Drone Images', this)">
 
     <script>
 
