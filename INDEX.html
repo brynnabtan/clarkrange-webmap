@@ -126,7 +126,15 @@
         <label class="toggle-item"><input type="checkbox" id="chk-boulder" checked onchange="toggleLayer('UAV-Derived Boulder - 04-24-2026', this)"><span class="legend-key caret">^</span>Boulder</label>
 
         <div class="legend-section">Survey Imagery</div>
-        <label class="toggle-item"><input type="checkbox" id="chk-drone-images" checked onchange="toggleLayer('UAV-Derived Drone Images - 04-24-2026', this)">
+        <label class="toggle-item">
+    <input type="checkbox"
+           id="chk-drone-images"
+           checked
+           onchange="toggleLayer('UAV-Derived Drone Images - 04-24-2026', this)">
+    <span class="legend-key point" style="background-color:#000;"></span>
+    Drone Images
+</label>
+
 
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoiYnJ5bm5hYnRhbiIsImEiOiJjbXJjNGZvdXgwMG5vMzBxM3JpYXRoZXN3In0.4G5a69c71gdjvW80QexbwA';
