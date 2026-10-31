@@ -172,46 +172,44 @@
     }
 
     map.on('load', () => {
-        // --- ADD GROUP-STYLED POLYGON SOURCE & LAYERS ---
-        // Replace 'path/to/your/soil_zones.geojson' with your actual URL, tileset ID, or file path.
-        map.addSource('Mapped Soil Units', {
-            type: 'geojson',
-            data: 'path/to/your/soil_zones.geojson'
-        });
 
-        // Fill layer styled conditionally by the 'group' property
+    // 1. Define your soil series configuration
+    const soilUnits = [
+        { id: 'soil-tilsit', name: 'Tilsit', color: '#8fc492' },
+        { id: 'soil-hartsells', name: 'Hartsells', color: '#5e9474' },
+        { id: 'soil-setback', name: 'Setback', color: '#a6c9e2' },
+        { id: 'soil-ramsey', name: 'Ramsey', color: '#a85f65' },
+        { id: 'soil-lily', name: 'Lily', color: '#a8b86d' },
+        { id: 'soil-slope', name: 'Slope', color: '#ad3640' },
+        { id: 'soil-lilyu', name: 'LilyU', color: '#d4a080' },
+        { id: 'soil-unmapped', name: 'Unmapped', color: '#d9d9d9' }
+    ];
+
+    // 2. Add an individual layer for each soil unit
+    soilUnits.forEach(unit => {
         map.addLayer({
-            id: 'Mapped Soil Units',
+            id: unit.id,
             type: 'fill',
             source: 'Mapped Soil Units',
+            filter: ['==', ['get', 'group'], unit.name], // Filters data strictly for this soil type
             paint: {
-                'fill-color': [
-                    'match',
-                    ['get', 'group'], // Property name in your GeoJSON
-                    'Tilsit', '#8fc492',
-                    'Hartsells', '#5e9474',
-                    'Setback', '#a6c9e2',
-                    'Ramsey', '#a85f65',
-                    'Lily', '#a8b86d',
-                    'Slope', '#ad3640',
-                    'LilyU', '#d4a080',
-                    'Unmapped', '#d9d9d9',
-                    '#984ea3' // Default color for unmatched groups
-                ],
+                'fill-color': unit.color,
                 'fill-opacity': 0.6
             }
         });
+    });
 
-        // Outline layer for clean polygon boundaries
-        map.addLayer({
-            id: 'Mapped Soil Units-outline',
-            type: 'line',
-            source: 'Mapped Soil Units',
-            paint: {
-                'line-color': '#333333',
-                'line-width': 1.2
-            }
-        });
+    // 3. Add an outline layer so boundaries remain crisp
+    map.addLayer({
+        id: 'grouped-polygons-outline',
+        type: 'line',
+        source: 'Mapped Soil Units',
+        paint: {
+            'line-color': '#333333',
+            'line-width': 1.0
+        }
+    });
+});
 
         // --- FIXED HOVER CONFIG ---
         const hoverConfigs = [
@@ -263,7 +261,14 @@
 
         // Click interaction for vectors (including the new grouped layer)
         const vectorLayers = [
-            'Mapped Soil Units',
+            'soil-tilsit',
+            'soil-hartsells',
+            'soil-lily',
+            'soil-ramsey',
+            'soil-slope',
+            'soil-lilyu',
+            'soil-setback',
+            'soil-unmapped',
             'Test Soil Area',
             'Hydric Soil Area',
             'Sub-Optimal Soil Area',
@@ -273,7 +278,7 @@
             'Property Boundary',
             'Surrounding Parcels',
             'Stream'
-        ];
+];
 
         vectorLayers.forEach(layerId => {
             if (map.getLayer(layerId)) {
