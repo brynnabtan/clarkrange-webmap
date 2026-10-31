@@ -84,22 +84,46 @@
         <label class="toggle-item"><input type="checkbox" id="chk-hydric-soil" checked onchange="toggleLayer('Hydric Soil Area', this)"><span class="legend-key" style="background-color: #53ccff;"></span>Hydric Soil Area</label>
         <label class="toggle-item"><input type="checkbox" id="chk-suboptimal-soil" checked onchange="toggleLayer('Sub-Optimal Soil Area', this)"><span class="legend-key" style="background-color: #bb35b6;"></span>Sub-Optimal Soil Area</label>
 
-        <!-- Grouped Polygons Toggle & Sub-legend -->
-        <label class="toggle-item">
-            <input type="checkbox" id="chk-grouped-polygons" checked onchange="toggleGroup(['Mapped Soil Units', 'grouped-polygons-outline'], this)">
-            <span class="legend-key" style="background: linear-gradient(135deg, #e41a1c 33%, #377eb8 33% 66%, #4daf4a 66%);"></span>Soil Units
-        </label>
-        <div class="sub-legend">
-            <div class="toggle-item"><span class="sub-legend-key" style="background-color: #8fc492;"></span>Tilsit</div>
-            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #5e9474;"></span>Hartsells</div>
-            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #a8b86d;"></span>Lily</div>
-            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #a85f65;"></span>Ramsey</div>
-            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #ad3640;"></span>Slope</div>
-            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #d4a080;"></span>LilyU</div>
-            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #a6c9e2;"></span>Setback</div>
-            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #d9d9d9;"></span>Unmapped</div>
+<!-- Grouped Polygons Master Toggle & Sub-legend -->
+<label class="toggle-item">
+    <input type="checkbox" id="chk-mapped-soil-units" checked onchange="toggleMasterSoil(this)">
+    <span class="legend-key" style="background: linear-gradient(135deg, #8fc492 25%, #5e9474 25% 50%, #a8b86d 50% 75%, #a85f65 75%);"></span>Mapped Soil Units
+</label>
 
-        </div>
+<div class="sub-legend">
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" id="chk-soil-tilsit" checked onchange="toggleSubLayer('soil-tilsit', this)">
+        <span class="sub-legend-key" style="background-color: #8fc492;"></span>Tilsit
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" id="chk-soil-hartsells" checked onchange="toggleSubLayer('soil-hartsells', this)">
+        <span class="sub-legend-key" style="background-color: #5e9474;"></span>Hartsells
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" id="chk-soil-lily" checked onchange="toggleSubLayer('soil-lily', this)">
+        <span class="sub-legend-key" style="background-color: #a8b86d;"></span>Lily
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" id="chk-soil-ramsey" checked onchange="toggleSubLayer('soil-ramsey', this)">
+        <span class="sub-legend-key" style="background-color: #a85f65;"></span>Ramsey
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" id="chk-soil-slope" checked onchange="toggleSubLayer('soil-slope', this)">
+        <span class="sub-legend-key" style="background-color: #ad3640;"></span>Slope
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" id="chk-soil-lilyu" checked onchange="toggleSubLayer('soil-lilyu', this)">
+        <span class="sub-legend-key" style="background-color: #d4a080;"></span>LilyU
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" id="chk-soil-setback" checked onchange="toggleSubLayer('soil-setback', this)">
+        <span class="sub-legend-key" style="background-color: #a6c9e2;"></span>Setback
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" id="chk-soil-unmapped" checked onchange="toggleSubLayer('soil-unmapped', this)">
+        <span class="sub-legend-key" style="background-color: #d9d9d9;"></span>Unmapped
+    </label>
+</div>
 
         <div class="legend-section">Environmental & Boundaries</div>
         <label class="toggle-item"><input type="checkbox" id="chk-property" checked onchange="toggleLayer('Property Boundary', this)"><span class="legend-key line" style="background-color: #000000;"></span>Property Boundary</label>
