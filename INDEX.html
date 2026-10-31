@@ -1,6 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Clarkrange Map</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <!-- Mapbox GL JS Styles and Library MUST load here first -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.js"></script>
+    <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%; }
+        .mapboxgl-popup { max-width: 350px !important; }
+        .popup-table { width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 11px; margin-top: 8px; }
+        .popup-table th, .popup-table td { padding: 5px 6px; text-align: left; border-bottom: 1px solid #ddd; }
+        .popup-table th { background-color: #f4f4f4; font-weight: bold; color: #333; }
+        .popup-table tr:nth-child(even) { background-color: #fafafa; }
+        .map-legend { position: absolute; bottom: 30px; right: 10px; z-index: 1; background: rgba(255, 255, 255, 0.95); padding: 12px; border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: #333; max-width: 250px; max-height: 85vh; overflow-y: auto; }
+        .legend-title { font-weight: bold; margin-bottom: 6px; font-size: 13px; border-bottom: 1px solid #ddd; padding-bottom: 4px; cursor: pointer; user-select: none; }
+        .legend-section { font-weight: bold; font-size: 10px; text-transform: uppercase; color: #777; margin-top: 8px; margin-bottom: 4px; }
+        .toggle-item { display: flex; align-items: center; margin-bottom: 4px; cursor: pointer; }
+        .toggle-item input { margin-right: 8px; cursor: pointer; }
+        .legend-key { display: inline-block; width: 16px; height: 16px; margin-right: 8px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.2); flex-shrink: 0; }
+        .legend-key.line { height: 3px; border-radius: 0; }
+        .legend-key.point { border-radius: 50%; width: 10px; height: 10px; margin-left: 3px; margin-right: 11px; }
+        .legend-key.raster-box { width: 14px; height: 14px; border: 1px dashed #555; background: repeating-linear-gradient(45deg, #ccc, #ccc 2px, #fff 2px, #fff 4px); }
+        .legend-key.caret { background: none !important; border: none !important; font-weight: bold; font-size: 16px; line-height: 16px; text-align: center; color: #000000; margin-right: 8px; }
+
+        .sub-legend { margin-left: 20px; margin-bottom: 6px; border-left: 2px solid #ddd; padding-left: 8px; }
+        .sub-legend-item { display: flex; align-items: center; margin-bottom: 3px; font-size: 11px; color: #444; }
+        .sub-legend-key { width: 12px; height: 12px; margin-right: 6px; border-radius: 2px; flex-shrink: 0; }
+
+        #legend-content { transition: max-height 0.25s ease-out; overflow: hidden; max-height: 700px; }
+        #legend-content.collapsed { max-height: 0; padding: 0; }
+
+        #company-logo { position: absolute; top: 10px; left: 10px; z-index: 10; }
+        #company-logo img { width: 180px; height: auto; object-fit: contain; opacity: 0.95; }
+
+        #map-title {
+            position: absolute;
+            top: 20px;
+            left: 200px;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 6px 12px;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="company-logo">
+    <img src="https://i.imgur.com/I3uxPiA.jpg" alt="Company Logo">
+</div>
+
+<div id="map-title">
+    Clarkrange Regional Business Park – Soil Mapping Project: Deliverable I
+</div>
+
+<div id="legend" class="map-legend">
+    <div id="legend-header" class="legend-title">Legend ▼</div>
+
+    <div id="legend-content">
+        <div class="legend-section">Background Imagery</div>
+        <label class="toggle-item">
+            <input type="checkbox" id="chk-ortho" checked onchange="toggleLayer('UAV-Derived Orthomosaic - 04-24-2026', this)">
+            <span class="legend-key raster-box"></span>Drone Orthomosaic
+        </label>
+        <label class="toggle-item">
+            <input type="checkbox" id="chk-dsm" checked onchange="toggleLayer('UAV-Derived Digital Surface Model - 04-24-2026', this)">
+            <span class="legend-key raster-box"></span>Digital Surface Model (DSM)
+        </label>
+
+        <div class="legend-section">Soil Assessment</div>
+        <label class="toggle-item"><input type="checkbox" id="chk-test-soil" checked onchange="toggleLayer('Test Soil Area', this)"><span class="legend-key" style="background-color: #23852a;"></span>Test Soil Area</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-hydric-soil" checked onchange="toggleLayer('Hydric Soil Area', this)"><span class="legend-key" style="background-color: #53ccff;"></span>Hydric Soil Area</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-suboptimal-soil" checked onchange="toggleLayer('Sub-Optimal Soil Area', this)"><span class="legend-key" style="background-color: #bb35b6;"></span>Sub-Optimal Soil Area</label>
+
+        <!-- Master Soil Units Toggle -->
+        <label class="toggle-item">
+            <input type="checkbox" id="chk-mapped-soil-units" checked onchange="toggleMasterSoil(this)">
+            <span class="legend-key" style="background: linear-gradient(135deg, #8fc492 25%, #5e9474 25% 50%, #a8b86d 50% 75%, #a85f65 75%);"></span>Mapped Soil Units
+        </label>
+        
+        <!-- Individual Soil Unit Sub-Toggles -->
+        <div class="sub-legend">
+            <label class="toggle-item sub-legend-item">
+                <input type="checkbox" class="sub-soil-chk" id="chk-soil-tilsit" checked onchange="toggleSubLayer('soil-tilsit', this)">
+                <span class="sub-legend-key" style="background-color: #8fc492;"></span>Tilsit
+            </label>
+            <label class="toggle-item sub-legend-item">
+                <input type="checkbox" class="sub-soil-chk" id="chk-soil-hartsells" checked onchange="toggleSubLayer('soil-hartsells', this)">
+                <span class="sub-legend-key" style="background-color: #5e9474;"></span>Hartsells
+            </label>
+            <label class="toggle-item sub-legend-item">
+                <input type="checkbox" class="sub-soil-chk" id="chk-soil-lily" checked onchange="toggleSubLayer('soil-lily', this)">
+                <span class="sub-legend-key" style="background-color: #a8b86d;"></span>Lily
+            </label>
+            <label class="toggle-item sub-legend-item">
+                <input type="checkbox" class="sub-soil-chk" id="chk-soil-ramsey" checked onchange="toggleSubLayer('soil-ramsey', this)">
+                <span class="sub-legend-key" style="background-color: #a85f65;"></span>Ramsey
+            </label>
+            <label class="toggle-item sub-legend-item">
+                <input type="checkbox" class="sub-soil-chk" id="chk-soil-slope" checked onchange="toggleSubLayer('soil-slope', this)">
+                <span class="sub-legend-key" style="background-color: #ad3640;"></span>Slope
+            </label>
+            <label class="toggle-item sub-legend-item">
+                <input type="checkbox" class="sub-soil-chk" id="chk-soil-lilyu" checked onchange="toggleSubLayer('soil-lilyu', this)">
+                <span class="sub-legend-key" style="background-color: #d4a080;"></span>LilyU
+            </label>
+            <label class="toggle-item sub-legend-item">
+                <input type="checkbox" class="sub-soil-chk" id="chk-soil-setback" checked onchange="toggleSubLayer('soil-setback', this)">
+                <span class="sub-legend-key" style="background-color: #a6c9e2;"></span>Setback
+            </label>
+            <label class="toggle-item sub-legend-item">
+                <input type="checkbox" class="sub-soil-chk" id="chk-soil-unmapped" checked onchange="toggleSubLayer('soil-unmapped', this)">
+                <span class="sub-legend-key" style="background-color: #d9d9d9;"></span>Unmapped
+            </label>
+        </div>
+
+        <div class="legend-section">Environmental & Boundaries</div>
+        <label class="toggle-item"><input type="checkbox" id="chk-property" checked onchange="toggleLayer('Property Boundary', this)"><span class="legend-key line" style="background-color: #000000;"></span>Property Boundary</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-stream" checked onchange="toggleLayer('Stream', this)"><span class="legend-key line" style="background-color: #017bf2;"></span>Stream</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-buffer" checked onchange="toggleLayer('25ft Buffer Around Water Bodies', this)"><span class="legend-key" style="background-color: #54a2cf; opacity: 0.4;"></span>25ft Water Buffer</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-waterbody" checked onchange="toggleLayer('Water Body', this)"><span class="legend-key" style="background-color: #5da8fe;"></span>Water Body</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-contours" checked onchange="toggleGroup(['5ft Interval Contours', 'UAV-Derived Contour Labels - 04-24-2026'], this)"><span class="legend-key line" style="background-color: #000000;"></span>5ft Interval Contours</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-parcels" checked onchange="toggleLayer('Surrounding Parcels', this)"><span class="legend-key line" style="background-color: #ffffff; border-style: dashed;"></span>Surrounding Parcels</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-boulder" checked onchange="toggleLayer('Boulder', this)"><span class="legend-key caret">^</span>Boulder</label>
+
+        <div class="legend-section">Survey Imagery</div>
+        <label class="toggle-item">
+            <input type="checkbox" id="chk-drone-images" checked onchange="toggleLayer('Drone Images', this)">
+            <span class="legend-key point" style="background-color:#000;"></span>Drone Images
+        </label>
+        <label class="toggle-item">
+            <input type="checkbox" id="chk-drone-images-highlighted" checked onchange="toggleLayer('Highlighted Drone Images of Sub-Optimal Soil Area', this)">
+            <span class="legend-key point" style="background-color:#FFD700; border: 1px solid #FF8C00;"></span>Highlighted Drone Images
+        </label>
+    </div>
+</div>
+
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiYnJ5bm5hYnRhbiIsImEiOiJjbXJjNGZvdXgwMG5vMzBxM3JpYXRoZXN3In0.4G5a69c71gdjvW80QexbwA';
-    
+
     const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/brynnabtan/cmqf4c9o300ba01s3at7x556r',
@@ -8,8 +156,8 @@
         zoom: 15.11
     });
 
-    // --- 1. GLOBAL TOGGLE FUNCTIONS (Must be outside map.on('load')) ---
-    
+    // --- GLOBAL TOGGLE FUNCTIONS ---
+
     function toggleLayer(layerId, checkboxElement) {
         if (!map.getLayer(layerId)) {
             console.warn(`Layer not found: ${layerId}`);
@@ -27,14 +175,10 @@
     }
 
     function toggleSubLayer(layerId, checkboxElement) {
-        if (!map.getLayer(layerId)) {
-            console.warn(`Layer not found: ${layerId}`);
-            return;
+        if (map.getLayer(layerId)) {
+            map.setLayoutProperty(layerId, 'visibility', checkboxElement.checked ? 'visible' : 'none');
         }
 
-        map.setLayoutProperty(layerId, 'visibility', checkboxElement.checked ? 'visible' : 'none');
-
-        // Sync master checkbox and outline
         const subCheckboxes = document.querySelectorAll('.sub-soil-chk');
         const masterCheckbox = document.getElementById('chk-mapped-soil-units');
         if (subCheckboxes.length && masterCheckbox) {
@@ -70,15 +214,20 @@
         });
     }
 
-    // --- 2. MAP LOAD EVENT ---
-    map.on('load', () => {
+    // --- MAP ON LOAD ---
 
-        // Source registration (adjust path if needed)
-        if (!map.getSource('soil-zones')) {
-            map.addSource('soil-zones', {
-                type: 'geojson',
-                data: './soil_zones.geojson'
-            });
+    map.on('load', () => {
+        // Look for the source. If it is already loaded in your Studio style as 'Mapped Soil Units', use it;
+        // otherwise add the fallback GeoJSON source.
+        let soilSourceId = 'Mapped Soil Units';
+        if (!map.getSource(soilSourceId)) {
+            soilSourceId = 'soil-zones';
+            if (!map.getSource(soilSourceId)) {
+                map.addSource(soilSourceId, {
+                    type: 'geojson',
+                    data: './soil_zones.geojson'
+                });
+            }
         }
 
         const soilUnits = [
@@ -92,28 +241,26 @@
             { id: 'soil-unmapped', name: 'Unmapped', color: '#d9d9d9' }
         ];
 
-        // Add sub-layers
         soilUnits.forEach(unit => {
             if (!map.getLayer(unit.id)) {
                 map.addLayer({
                     id: unit.id,
                     type: 'fill',
-                    source: 'soil-zones',
+                    source: soilSourceId,
                     filter: ['==', ['get', 'group'], unit.name],
                     paint: {
                         'fill-color': unit.color,
-                        'fill-opacity': 0.6
+                        'fill-opacity': 0.65
                     }
                 });
             }
         });
 
-        // Add outline
         if (!map.getLayer('grouped-polygons-outline')) {
             map.addLayer({
                 id: 'grouped-polygons-outline',
                 type: 'line',
-                source: 'soil-zones',
+                source: soilSourceId,
                 paint: {
                     'line-color': '#333333',
                     'line-width': 1.0
@@ -121,7 +268,7 @@
             });
         }
 
-        // Hover configurations
+        // Hover configs
         const hoverConfigs = [
             { layerId: '25ft Buffer Around Water Bodies', stateKey: 'Highlight Color Water' },
             { layerId: 'Drone Images', stateKey: 'Highlight Color Drone' },
@@ -215,9 +362,9 @@
             }
         });
 
-    }); // <-- EXACT CLOSE for map.on('load')
+    });
 
-    // --- 3. LEGEND ACCORDION HANDLER ---
+    // Accordion toggle
     const legendHeader = document.getElementById('legend-header');
     if (legendHeader) {
         legendHeader.addEventListener('click', () => {
@@ -227,3 +374,5 @@
         });
     }
 </script>
+</body>
+</html>
