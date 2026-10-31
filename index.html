@@ -90,7 +90,7 @@
             <span class="legend-key" style="background: linear-gradient(135deg, #e41a1c 33%, #377eb8 33% 66%, #4daf4a 66%);"></span>Soil Units
         </label>
         <div class="sub-legend">
-            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #8fc492;"></span>Tilsit</div>
+            <div class="toggle-item"><span class="sub-legend-key" style="background-color: #8fc492;"></span>Tilsit</div>
             <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #5e9474;"></span>Hartsells</div>
             <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #a8b86d;"></span>Lily</div>
             <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #a85f65;"></span>Ramsey</div>
@@ -150,7 +150,7 @@
     map.on('load', () => {
         // --- ADD GROUP-STYLED POLYGON SOURCE & LAYERS ---
         // Replace 'path/to/your/soil_zones.geojson' with your actual URL, tileset ID, or file path.
-        map.addSource('soil-zones', {
+        map.addSource('Mapped Soil Units', {
             type: 'geojson',
             data: 'path/to/your/soil_zones.geojson'
         });
@@ -182,7 +182,7 @@
         map.addLayer({
             id: 'Mapped Soil Units-outline',
             type: 'line',
-            source: 'soil-zones',
+            source: 'Mapped Soil Units',
             paint: {
                 'line-color': '#333333',
                 'line-width': 1.2
