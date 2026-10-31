@@ -96,6 +96,10 @@
         <span class="sub-legend-key" style="background-color: #8fc492;"></span>Tilsit
     </label>
     <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="Alticrest" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #75ad79;"></span>Alticrest
+    </label>
+    <label class="toggle-item sub-legend-item">
         <input type="checkbox" class="sub-soil-chk" value="Hartsells" checked onchange="toggleSubLayer()">
         <span class="sub-legend-key" style="background-color: #5e9474;"></span>Hartsells
     </label>
@@ -114,6 +118,10 @@
     <label class="toggle-item sub-legend-item">
         <input type="checkbox" class="sub-soil-chk" value="LilyU" checked onchange="toggleSubLayer()">
         <span class="sub-legend-key" style="background-color: #d4a080;"></span>LilyU
+    </label>
+        <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="AlticrestU" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #c97878;"></span>AlticrestU
     </label>
     <label class="toggle-item sub-legend-item">
         <input type="checkbox" class="sub-soil-chk" value="Setback" checked onchange="toggleSubLayer()">
@@ -255,10 +263,12 @@ function toggleSubLayer() {
 
         const soilUnits = [
             { id: 'soil-tilsit', name: 'Tilsit', color: '#8fc492' },
+            { id: 'soil-alticrest', name: 'Alticrest', color: '#75ad79' },
             { id: 'soil-hartsells', name: 'Hartsells', color: '#5e9474' },
             { id: 'soil-setback', name: 'Setback', color: '#a6c9e2' },
             { id: 'soil-ramsey', name: 'Ramsey', color: '#a85f65' },
             { id: 'soil-lily', name: 'Lily', color: '#a8b86d' },
+            { id: 'soil-alticrestu', name: 'AlticrestU', color: '#c97878' },
             { id: 'soil-slope', name: 'Slope', color: '#ad3640' },
             { id: 'soil-lilyu', name: 'LilyU', color: '#d4a080' },
             { id: 'soil-unmapped', name: 'Unmapped', color: '#d9d9d9' }
