@@ -124,6 +124,10 @@
         <span class="sub-legend-key" style="background-color: #c97878;"></span>AlticrestU
     </label>
     <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="AlticrestU" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #c97878;"></span>AlticrestU
+    </label>
+    <label class="toggle-item sub-legend-item">
         <input type="checkbox" class="sub-soil-chk" value="Setback" checked onchange="toggleSubLayer()">
         <span class="sub-legend-key" style="background-color: #a6c9e2;"></span>Setback
     </label>
@@ -264,6 +268,7 @@ function toggleSubLayer() {
         const soilUnits = [
             { id: 'soil-tilsit', name: 'Tilsit', color: '#8fc492' },
             { id: 'soil-alticrest', name: 'Alticrest', color: '#75ad79' },
+            { id: 'soil-alticrestu', name: 'Alticrest Unsuitable', color: '#c97878' },
             { id: 'soil-hartsells', name: 'Hartsells', color: '#5e9474' },
             { id: 'soil-setback', name: 'Setback', color: '#a6c9e2' },
             { id: 'soil-ramsey', name: 'Ramsey', color: '#a85f65' },
