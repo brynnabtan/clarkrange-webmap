@@ -84,46 +84,46 @@
         <label class="toggle-item"><input type="checkbox" id="chk-suboptimal-soil" checked onchange="toggleLayer('Sub-Optimal Soil Area', this)"><span class="legend-key" style="background-color: #bb35b6;"></span>Sub-Optimal Soil Area</label>
 
         <!-- Master Soil Units Toggle -->
-        <label class="toggle-item">
-            <input type="checkbox" id="chk-mapped-soil-units" checked onchange="toggleMasterSoil(this)">
-            <span class="legend-key" style="background: linear-gradient(135deg, #8fc492 25%, #5e9474 25% 50%, #a8b86d 50% 75%, #a85f65 75%);"></span>Mapped Soil Units
-        </label>
-        
-        <!-- Individual Soil Unit Sub-Toggles -->
-        <div class="sub-legend">
-            <label class="toggle-item sub-legend-item">
-                <input type="checkbox" class="sub-soil-chk" id="chk-soil-tilsit" checked onchange="toggleSubLayer('soil-tilsit', this)">
-                <span class="sub-legend-key" style="background-color: #8fc492;"></span>Tilsit
-            </label>
-            <label class="toggle-item sub-legend-item">
-                <input type="checkbox" class="sub-soil-chk" id="chk-soil-hartsells" checked onchange="toggleSubLayer('soil-hartsells', this)">
-                <span class="sub-legend-key" style="background-color: #5e9474;"></span>Hartsells
-            </label>
-            <label class="toggle-item sub-legend-item">
-                <input type="checkbox" class="sub-soil-chk" id="chk-soil-lily" checked onchange="toggleSubLayer('soil-lily', this)">
-                <span class="sub-legend-key" style="background-color: #a8b86d;"></span>Lily
-            </label>
-            <label class="toggle-item sub-legend-item">
-                <input type="checkbox" class="sub-soil-chk" id="chk-soil-ramsey" checked onchange="toggleSubLayer('soil-ramsey', this)">
-                <span class="sub-legend-key" style="background-color: #a85f65;"></span>Ramsey
-            </label>
-            <label class="toggle-item sub-legend-item">
-                <input type="checkbox" class="sub-soil-chk" id="chk-soil-slope" checked onchange="toggleSubLayer('soil-slope', this)">
-                <span class="sub-legend-key" style="background-color: #ad3640;"></span>Slope
-            </label>
-            <label class="toggle-item sub-legend-item">
-                <input type="checkbox" class="sub-soil-chk" id="chk-soil-lilyu" checked onchange="toggleSubLayer('soil-lilyu', this)">
-                <span class="sub-legend-key" style="background-color: #d4a080;"></span>LilyU
-            </label>
-            <label class="toggle-item sub-legend-item">
-                <input type="checkbox" class="sub-soil-chk" id="chk-soil-setback" checked onchange="toggleSubLayer('soil-setback', this)">
-                <span class="sub-legend-key" style="background-color: #a6c9e2;"></span>Setback
-            </label>
-            <label class="toggle-item sub-legend-item">
-                <input type="checkbox" class="sub-soil-chk" id="chk-soil-unmapped" checked onchange="toggleSubLayer('soil-unmapped', this)">
-                <span class="sub-legend-key" style="background-color: #d9d9d9;"></span>Unmapped
-            </label>
-        </div>
+<label class="toggle-item">
+    <input type="checkbox" id="chk-mapped-soil-units" checked onchange="toggleMasterSoil(this)">
+    <span class="legend-key" style="background: linear-gradient(135deg, #8fc492 25%, #5e9474 25% 50%, #a8b86d 50% 75%, #a85f65 75%);"></span>Mapped Soil Units
+</label>
+
+<!-- Individual Soil Unit Sub-Toggles -->
+<div class="sub-legend">
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="Tilsit" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #8fc492;"></span>Tilsit
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="Hartsells" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #5e9474;"></span>Hartsells
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="Lily" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #a8b86d;"></span>Lily
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="Ramsey" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #a85f65;"></span>Ramsey
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="Slope" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #ad3640;"></span>Slope
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="LilyU" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #d4a080;"></span>LilyU
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="Setback" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #a6c9e2;"></span>Setback
+    </label>
+    <label class="toggle-item sub-legend-item">
+        <input type="checkbox" class="sub-soil-chk" value="Unmapped" checked onchange="toggleSubLayer()">
+        <span class="sub-legend-key" style="background-color: #d9d9d9;"></span>Unmapped
+    </label>
+</div>
 
         <div class="legend-section">Environmental & Boundaries</div>
         <label class="toggle-item"><input type="checkbox" id="chk-property" checked onchange="toggleLayer('Property Boundary', this)"><span class="legend-key line" style="background-color: #000000;"></span>Property Boundary</label>
@@ -174,45 +174,68 @@
         });
     }
 
-    function toggleSubLayer(layerId, checkboxElement) {
-        if (map.getLayer(layerId)) {
-            map.setLayoutProperty(layerId, 'visibility', checkboxElement.checked ? 'visible' : 'none');
-        }
+    // Target layer name from Mapbox Studio
+const SOIL_LAYER_ID = 'Mapped Soil Units';
 
-        const subCheckboxes = document.querySelectorAll('.sub-soil-chk');
-        const masterCheckbox = document.getElementById('chk-mapped-soil-units');
-        if (subCheckboxes.length && masterCheckbox) {
-            const anyChecked = Array.from(subCheckboxes).some(cb => cb.checked);
-            const allChecked = Array.from(subCheckboxes).every(cb => cb.checked);
-            masterCheckbox.checked = anyChecked;
-            masterCheckbox.indeterminate = anyChecked && !allChecked;
+// The property column in your vector data (change 'group' if your attribute is named differently)
+const SOIL_PROPERTY_KEY = 'group';
 
-            if (map.getLayer('grouped-polygons-outline')) {
-                map.setLayoutProperty('grouped-polygons-outline', 'visibility', anyChecked ? 'visible' : 'none');
-            }
-        }
+// Master toggle: shows/hides all or resets filter
+function toggleMasterSoil(masterElement) {
+    const isChecked = masterElement.checked;
+    masterElement.indeterminate = false;
+
+    // Check or uncheck all sub-boxes
+    document.querySelectorAll('.sub-soil-chk').forEach(cb => {
+        cb.checked = isChecked;
+    });
+
+    if (!map.getLayer(SOIL_LAYER_ID)) return;
+
+    if (isChecked) {
+        map.setLayoutProperty(SOIL_LAYER_ID, 'visibility', 'visible');
+        map.setFilter(SOIL_LAYER_ID, null); // Clear filter to show all
+    } else {
+        map.setLayoutProperty(SOIL_LAYER_ID, 'visibility', 'none');
+    }
+}
+
+// Sub-toggle: dynamically builds an 'in' filter for checked items
+function toggleSubLayer() {
+    if (!map.getLayer(SOIL_LAYER_ID)) {
+        console.warn(`Layer "${SOIL_LAYER_ID}" not found in Mapbox style.`);
+        return;
     }
 
-    function toggleMasterSoil(masterElement) {
-        const isChecked = masterElement.checked;
-        masterElement.indeterminate = false;
+    // Collect values from all checked sub-items
+    const checkedValues = [];
+    document.querySelectorAll('.sub-soil-chk').forEach(cb => {
+        if (cb.checked) {
+            checkedValues.push(cb.value);
+        }
+    });
 
-        document.querySelectorAll('.sub-soil-chk').forEach(cb => {
-            cb.checked = isChecked;
-        });
+    const masterCheckbox = document.getElementById('chk-mapped-soil-units');
+    const totalCount = document.querySelectorAll('.sub-soil-chk').length;
 
-        const allSoilLayerIds = [
-            'soil-tilsit', 'soil-hartsells', 'soil-setback', 'soil-ramsey',
-            'soil-lily', 'soil-slope', 'soil-lilyu', 'soil-unmapped',
-            'grouped-polygons-outline'
-        ];
+    if (checkedValues.length === 0) {
+        // Nothing selected: hide the layer completely
+        map.setLayoutProperty(SOIL_LAYER_ID, 'visibility', 'none');
+        if (masterCheckbox) {
+            masterCheckbox.checked = false;
+            masterCheckbox.indeterminate = false;
+        }
+    } else {
+        // At least one selected: make visible and filter by checked names
+        map.setLayoutProperty(SOIL_LAYER_ID, 'visibility', 'visible');
+        map.setFilter(SOIL_LAYER_ID, ['in', ['get', SOIL_PROPERTY_KEY], ['literal', checkedValues]]);
 
-        allSoilLayerIds.forEach(id => {
-            if (map.getLayer(id)) {
-                map.setLayoutProperty(id, 'visibility', isChecked ? 'visible' : 'none');
-            }
-        });
+        if (masterCheckbox) {
+            masterCheckbox.checked = checkedValues.length === totalCount;
+            masterCheckbox.indeterminate = checkedValues.length > 0 && checkedValues.length < totalCount;
+        }
     }
+}
 
     // --- MAP ON LOAD ---
 
@@ -240,21 +263,6 @@
             { id: 'soil-lilyu', name: 'LilyU', color: '#d4a080' },
             { id: 'soil-unmapped', name: 'Unmapped', color: '#d9d9d9' }
         ];
-
-        soilUnits.forEach(unit => {
-            if (!map.getLayer(unit.id)) {
-                map.addLayer({
-                    id: unit.id,
-                    type: 'fill',
-                    source: soilSourceId,
-                    filter: ['==', ['get', 'group'], unit.name],
-                    paint: {
-                        'fill-color': unit.color,
-                        'fill-opacity': 0.65
-                    }
-                });
-            }
-        });
 
         if (!map.getLayer('grouped-polygons-outline')) {
             map.addLayer({
@@ -317,13 +325,18 @@
         });
 
         // Popup clicks
-        const vectorLayers = [
-            'soil-tilsit', 'soil-hartsells', 'soil-setback', 'soil-ramsey',
-            'soil-lily', 'soil-slope', 'soil-lilyu', 'soil-unmapped',
-            'Test Soil Area', 'Hydric Soil Area', 'Sub-Optimal Soil Area',
-            '25ft Buffer Around Water Bodies', 'Water Body', 'Boulder',
-            'Property Boundary', 'Surrounding Parcels', 'Stream'
-        ];
+const vectorLayers = [
+    'Mapped Soil Units', // Studio layer ID
+    'Test Soil Area',
+    'Hydric Soil Area',
+    'Sub-Optimal Soil Area',
+    '25ft Buffer Around Water Bodies',
+    'Water Body',
+    'Boulder',
+    'Property Boundary',
+    'Surrounding Parcels',
+    'Stream'
+];
 
         vectorLayers.forEach(layerId => {
             if (map.getLayer(layerId)) {
