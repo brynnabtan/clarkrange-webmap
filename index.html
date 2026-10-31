@@ -14,7 +14,7 @@
         .popup-table th, .popup-table td { padding: 5px 6px; text-align: left; border-bottom: 1px solid #ddd; }
         .popup-table th { background-color: #f4f4f4; font-weight: bold; color: #333; }
         .popup-table tr:nth-child(even) { background-color: #fafafa; }
-        .map-legend { position: absolute; bottom: 30px; right: 10px; z-index: 1; background: rgba(255, 255, 255, 0.95); padding: 12px; border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: #333; max-width: 240px; max-height: 85vh; overflow-y: auto; }
+        .map-legend { position: absolute; bottom: 30px; right: 10px; z-index: 1; background: rgba(255, 255, 255, 0.95); padding: 12px; border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: #333; max-width: 250px; max-height: 85vh; overflow-y: auto; }
         .legend-title { font-weight: bold; margin-bottom: 6px; font-size: 13px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
         .legend-section { font-weight: bold; font-size: 10px; text-transform: uppercase; color: #777; margin-top: 8px; margin-bottom: 4px; }
         .toggle-item { display: flex; align-items: center; margin-bottom: 4px; cursor: pointer; }
@@ -25,53 +25,32 @@
         .legend-key.raster-box { width: 14px; height: 14px; border: 1px dashed #555; background: repeating-linear-gradient(45deg, #ccc, #ccc 2px, #fff 2px, #fff 4px); }
         .legend-key.caret { background: none !important; border: none !important; font-weight: bold; font-size: 16px; line-height: 16px; text-align: center; color: #000000; margin-right: 8px; }
 
+        /* Sub-items nested under grouped polygon layer */
+        .sub-legend { margin-left: 24px; margin-bottom: 6px; border-left: 2px solid #ddd; padding-left: 8px; }
+        .sub-legend-item { display: flex; align-items: center; margin-bottom: 3px; font-size: 11px; color: #555; }
+        .sub-legend-key { width: 12px; height: 12px; margin-right: 6px; border-radius: 2px; flex-shrink: 0; }
 
-        #legend-header {
-    cursor: pointer;
-    user-select: none;
-}
+        #legend-header { cursor: pointer; user-select: none; }
+        #legend-content { transition: max-height 0.25s ease-out; overflow: hidden; max-height: 600px; }
+        #legend-content.collapsed { max-height: 0; padding: 0; }
 
-#legend-content {
-    transition: max-height 0.25s ease-out;
-    overflow: hidden;
-    max-height: 600px;
-}
+        #company-logo { position: absolute; top: 10px; left: 10px; z-index: 10; }
+        #company-logo img { width: 180px; height: auto; object-fit: contain; opacity: 0.95; }
 
-#legend-content.collapsed {
-    max-height: 0;
-    padding: 0;
-}
-
-#company-logo {
-    position: absolute;
-    top: 10px;      /* moved from bottom → top */
-    left: 10px;     /* stays left */
-    z-index: 10;
-}
-
-#company-logo img {
-    width: 180px;      /* adjust size as needed */
-    height: auto;
-    object-fit: contain;
-    opacity: 0.95;
-}
-
-
-#map-title {
-    position: absolute;
-    top: 20px;              /* aligns nicely with the logo */
-    left: 200px;            /* moves the title to the right of the logo */
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-    background: rgba(255, 255, 255, 0.85);
-    padding: 6px 12px;
-    border-radius: 4px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
-    z-index: 10;
-}
-
+        #map-title {
+            position: absolute;
+            top: 20px;
+            left: 200px;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 6px 12px;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -85,36 +64,37 @@
     Clarkrange Regional Business Park – Soil Mapping Project: Deliverable I
 </div>
 
-
-
 <div id="legend" class="map-legend">
     <div id="legend-header" class="legend-title">Legend ▼</div>
 
-    <!-- EVERYTHING collapses inside this wrapper -->
     <div id="legend-content">
 
         <div class="legend-section">Background Imagery</div>
-<label class="toggle-item">
-    <input type="checkbox"
-           id="chk-ortho"
-           checked
-           onchange="toggleLayer('UAV-Derived Orthomosaic - 04-24-2026', this)">
-    <span class="legend-key raster-box"></span>Drone Orthomosaic
-</label>
-
-<label class="toggle-item">
-    <input type="checkbox"
-           id="chk-dsm"
-           checked
-           onchange="toggleLayer('UAV-Derived Digital Surface Model - 04-24-2026', this)">
-    <span class="legend-key raster-box"></span>Digital Surface Model (DSM)
-</label>
-
+        <label class="toggle-item">
+            <input type="checkbox" id="chk-ortho" checked onchange="toggleLayer('UAV-Derived Orthomosaic - 04-24-2026', this)">
+            <span class="legend-key raster-box"></span>Drone Orthomosaic
+        </label>
+        <label class="toggle-item">
+            <input type="checkbox" id="chk-dsm" checked onchange="toggleLayer('UAV-Derived Digital Surface Model - 04-24-2026', this)">
+            <span class="legend-key raster-box"></span>Digital Surface Model (DSM)
+        </label>
 
         <div class="legend-section">Soil Assessment</div>
         <label class="toggle-item"><input type="checkbox" id="chk-test-soil" checked onchange="toggleLayer('Test Soil Area', this)"><span class="legend-key" style="background-color: #23852a;"></span>Test Soil Area</label>
         <label class="toggle-item"><input type="checkbox" id="chk-hydric-soil" checked onchange="toggleLayer('Hydric Soil Area', this)"><span class="legend-key" style="background-color: #53ccff;"></span>Hydric Soil Area</label>
         <label class="toggle-item"><input type="checkbox" id="chk-suboptimal-soil" checked onchange="toggleLayer('Sub-Optimal Soil Area', this)"><span class="legend-key" style="background-color: #bb35b6;"></span>Sub-Optimal Soil Area</label>
+
+        <!-- Grouped Polygons Toggle & Sub-legend -->
+        <label class="toggle-item">
+            <input type="checkbox" id="chk-grouped-polygons" checked onchange="toggleGroup(['grouped-polygons-fill', 'grouped-polygons-outline'], this)">
+            <span class="legend-key" style="background: linear-gradient(135deg, #e41a1c 33%, #377eb8 33% 66%, #4daf4a 66%);"></span>Soil Management Units
+        </label>
+        <div class="sub-legend">
+            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #e41a1c;"></span>Group A (High Clay)</div>
+            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #377eb8;"></span>Group B (Loam)</div>
+            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #4daf4a;"></span>Group C (Sandy Loam)</div>
+            <div class="sub-legend-item"><span class="sub-legend-key" style="background-color: #984ea3;"></span>Other / General</div>
+        </div>
 
         <div class="legend-section">Environmental & Boundaries</div>
         <label class="toggle-item"><input type="checkbox" id="chk-property" checked onchange="toggleLayer('Property Boundary', this)"><span class="legend-key line" style="background-color: #000000;"></span>Property Boundary</label>
@@ -127,162 +107,191 @@
 
         <div class="legend-section">Survey Imagery</div>
         <label class="toggle-item">
-    <input type="checkbox"
-           id="chk-drone-images"
-           checked
-           onchange="toggleLayer('Drone Images', this)">
-    <span class="legend-key point" style="background-color:#000;"></span>
-    Drone Images
-</label>
+            <input type="checkbox" id="chk-drone-images" checked onchange="toggleLayer('Drone Images', this)">
+            <span class="legend-key point" style="background-color:#000;"></span>Drone Images
+        </label>
+        <label class="toggle-item">
+            <input type="checkbox" id="chk-drone-images-highlighted" checked onchange="toggleLayer('Highlighted Drone Images of Sub-Optimal Soil Area', this)">
+            <span class="legend-key point" style="background-color:#FFD700; border: 1px solid #FF8C00;"></span>Highlighted Drone Images
+        </label>
+    </div>
+</div>
 
-<label class="toggle-item">
-    <input type="checkbox"
-           id="chk-drone-images-highlighted"
-           checked
-           onchange="toggleLayer('Highlighted Drone Images of Sub-Optimal Soil Area', this)">
-    <span class="legend-key point" style="background-color:#FFD700; border: 1px solid #FF8C00;"></span>
-    Highlighted Drone Images
-</label>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYnJ5bm5hYnRhbiIsImEiOiJjbXJjNGZvdXgwMG5vMzBxM3JpYXRoZXN3In0.4G5a69c71gdjvW80QexbwA';
+    
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/brynnabtan/cmqf4c9o300ba01s3at7x556r',
+        center: [-84.954, 36.210],
+        zoom: 15.11
+    });
 
-
-
-    <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoiYnJ5bm5hYnRhbiIsImEiOiJjbXJjNGZvdXgwMG5vMzBxM3JpYXRoZXN3In0.4G5a69c71gdjvW80QexbwA';
-        
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/brynnabtan/cmqf4c9o300ba01s3at7x556r',
-            center: [-84.954, 36.210],
-            zoom: 15.11
-        });
-
-       function toggleLayer(layerId, checkboxElement) {
-    const visibility = checkboxElement.checked ? 'visible' : 'none';
-
-    if (!map.getLayer(layerId)) {
-        console.warn(`Layer not found: ${layerId}`);
-        return;
+    function toggleLayer(layerId, checkboxElement) {
+        const visibility = checkboxElement.checked ? 'visible' : 'none';
+        if (!map.getLayer(layerId)) {
+            console.warn(`Layer not found: ${layerId}`);
+            return;
+        }
+        map.setLayoutProperty(layerId, 'visibility', visibility);
     }
 
-    map.setLayoutProperty(layerId, 'visibility', visibility);
-}
+    function toggleGroup(layerIds, checkboxElement) {
+        layerIds.forEach(id => {
+            if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', checkboxElement.checked ? 'visible' : 'none');
+        });
+    }
 
+    map.on('load', () => {
+        // --- ADD GROUP-STYLED POLYGON SOURCE & LAYERS ---
+        // Replace 'path/to/your/soil_zones.geojson' with your actual URL, tileset ID, or file path.
+        map.addSource('soil-zones', {
+            type: 'geojson',
+            data: 'path/to/your/soil_zones.geojson'
+        });
 
-        function toggleGroup(layerIds, checkboxElement) {
-            layerIds.forEach(id => {
-                if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', checkboxElement.checked ? 'visible' : 'none');
-            });
-        }
+        // Fill layer styled conditionally by the 'group' property
+        map.addLayer({
+            id: 'Mapped Soil Units',
+            type: 'fill',
+            source: 'Mapped Soil Units',
+            paint: {
+                'fill-color': [
+                    'match',
+                    ['get', 'group'], // Property name in your GeoJSON
+                    'Tilsit', '#8fc492',
+                    'Hartsells', '#5e9474',
+                    'Setback', '#a6c9e2',
+                    'Ramsey', '#a85f65',
+                    'Lily', '#a8b86d',
+                    'Slope', '#ad3640',
+                    'LilyU', '#d4a080',
+                    'Unmapped', '#d9d9d9',
+                    '#984ea3' // Default color for unmatched groups
+                ],
+                'fill-opacity': 0.6
+            }
+        });
 
-        map.on('load', () => {
-            // Note: Rasters are NOT added via code here. 
-            // Ensure they are ordered correctly in your Mapbox Studio style.
+        // Outline layer for clean polygon boundaries
+        map.addLayer({
+            id: 'Mapped Soil Units-outline',
+            type: 'line',
+            source: 'soil-zones',
+            paint: {
+                'line-color': '#333333',
+                'line-width': 1.2
+            }
+        });
 
-            // --- FIXED HOVER CONFIG (no more stuck highlights!) ---
-const hoverConfigs = [
-    { layerId: '25ft Buffer Around Water Bodies', stateKey: 'Highlight Color Water' },
-    { layerId: 'Drone Images', stateKey: 'Highlight Color Drone' },
-    { layerId: 'Sub-Optimal Soil Area', stateKey: 'Highlight Color Sub-Opt SA' },
-    { layerId: 'Hydric Soil Area', stateKey: 'Highlight Color Hydric SA' },
-    { layerId: 'Test Soil Area', stateKey: 'Highlight Color Test SA' }
-];
+        // --- FIXED HOVER CONFIG ---
+        const hoverConfigs = [
+            { layerId: '25ft Buffer Around Water Bodies', stateKey: 'Highlight Color Water' },
+            { layerId: 'Drone Images', stateKey: 'Highlight Color Drone' },
+            { layerId: 'Sub-Optimal Soil Area', stateKey: 'Highlight Color Sub-Opt SA' },
+            { layerId: 'Hydric Soil Area', stateKey: 'Highlight Color Hydric SA' },
+            { layerId: 'Test Soil Area', stateKey: 'Highlight Color Test SA' }
+        ];
 
-// Track active feature *per layer* instead of globally
-const activeFeatures = {};
+        const activeFeatures = {};
 
-hoverConfigs.forEach(config => {
-    map.on('mousemove', config.layerId, (e) => {
-        if (!e.features.length) return;
+        hoverConfigs.forEach(config => {
+            if (!map.getLayer(config.layerId)) return;
 
-        const prev = activeFeatures[config.layerId];
-        const current = e.features[0];
+            map.on('mousemove', config.layerId, (e) => {
+                if (!e.features.length) return;
+                const prev = activeFeatures[config.layerId];
+                const current = e.features[0];
 
-        // Turn OFF previous highlight for this layer
-        if (prev) {
-            map.setFeatureState(
-                { source: prev.source, sourceLayer: prev.sourceLayer, id: prev.id },
-                { [config.stateKey]: false }
-            );
-        }
-
-        // Turn ON new highlight
-        map.setFeatureState(
-            { source: current.source, sourceLayer: current.sourceLayer, id: current.id },
-            { [config.stateKey]: true }
-        );
-
-        activeFeatures[config.layerId] = current;
-        map.getCanvas().style.cursor = 'pointer';
-    });
-
-    map.on('mouseleave', config.layerId, () => {
-        const prev = activeFeatures[config.layerId];
-
-        // Turn OFF highlight when leaving the layer
-        if (prev) {
-            map.setFeatureState(
-                { source: prev.source, sourceLayer: prev.sourceLayer, id: prev.id },
-                { [config.stateKey]: false }
-            );
-        }
-
-        activeFeatures[config.layerId] = null;
-        map.getCanvas().style.cursor = '';
-    });
-});
-
-
-            // Click interaction
-            const vectorLayers = ['Test Soil Area', 'Hydric Soil Area', 'Sub-Optimal Soil Area', '25ft Buffer Around Water Bodies', 'Water Body', 'Boulder', 'Property Boundary', 'Surrounding Parcels', 'Stream'];
-            vectorLayers.forEach(layerId => {
-                if (map.getLayer(layerId)) {
-                    map.on('click', layerId, (e) => {
-                        const props = e.features[0].properties;
-                        let html = `<h3>${layerId}</h3><table class="popup-table">`;
-                        for (const [k, v] of Object.entries(props)) html += `<tr><td>${k}</td><td>${v}</td></tr>`;
-                        html += `</table>`;
-                        new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
-                    });
+                if (prev) {
+                    map.setFeatureState(
+                        { source: prev.source, sourceLayer: prev.sourceLayer, id: prev.id },
+                        { [config.stateKey]: false }
+                    );
                 }
+
+                map.setFeatureState(
+                    { source: current.source, sourceLayer: current.sourceLayer, id: current.id },
+                    { [config.stateKey]: true }
+                );
+
+                activeFeatures[config.layerId] = current;
+                map.getCanvas().style.cursor = 'pointer';
             });
-const droneDisplayNames = ['Drone Images', 'Highlighted Drone Images of Sub-Optimal Soil Area'];
 
-            droneDisplayNames.forEach(displayName => {
-                // Check if the layer exists in the map style
-                if (map.getLayer(displayName)) {
-                    map.on('click', displayName, (e) => {
-                        const props = e.features[0].properties;
-                        const imageUrl = props.PhotoURL_1; // Access your specific column name
-
-                        // Build the HTML for the popup
-                        let html = `<h3>Drone Imagery</h3>`;
-                        
-                        if (imageUrl) {
-                            html += `<img src="${imageUrl}" style="width:100%; height:auto; border-radius:4px; margin-bottom:8px;">`;
-                        } else {
-                            html += `<p>No image available for this location.</p>`;
-                        }
-
-                        new mapboxgl.Popup()
-                            .setLngLat(e.lngLat)
-                            .setHTML(html)
-                            .addTo(map);
-                    });
-
-                    // Maintain cursor interactivity
-                    map.on('mouseenter', displayName, () => map.getCanvas().style.cursor = 'pointer');
-                    map.on('mouseleave', displayName, () => map.getCanvas().style.cursor = '');
+            map.on('mouseleave', config.layerId, () => {
+                const prev = activeFeatures[config.layerId];
+                if (prev) {
+                    map.setFeatureState(
+                        { source: prev.source, sourceLayer: prev.sourceLayer, id: prev.id },
+                        { [config.stateKey]: false }
+                    );
                 }
+                activeFeatures[config.layerId] = null;
+                map.getCanvas().style.cursor = '';
             });
         });
-document.getElementById('legend-header').addEventListener('click', () => {
-    const content = document.getElementById('legend-content');
-    const header = document.getElementById('legend-header');
 
-    const isCollapsed = content.classList.toggle('collapsed');
-    header.textContent = isCollapsed ? 'Legend ▲' : 'Legend ▼';
-});
+        // Click interaction for vectors (including the new grouped layer)
+        const vectorLayers = [
+            'Mapped Soil Units',
+            'Test Soil Area',
+            'Hydric Soil Area',
+            'Sub-Optimal Soil Area',
+            '25ft Buffer Around Water Bodies',
+            'Water Body',
+            'Boulder',
+            'Property Boundary',
+            'Surrounding Parcels',
+            'Stream'
+        ];
 
-    </script>
+        vectorLayers.forEach(layerId => {
+            if (map.getLayer(layerId)) {
+                map.on('click', layerId, (e) => {
+                    const props = e.features[0].properties;
+                    let html = `<h3>${layerId}</h3><table class="popup-table">`;
+                    for (const [k, v] of Object.entries(props)) html += `<tr><td>${k}</td><td>${v}</td></tr>`;
+                    html += `</table>`;
+                    new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+                });
+            }
+        });
+
+        // Drone imagery clicks
+        const droneDisplayNames = ['Drone Images', 'Highlighted Drone Images of Sub-Optimal Soil Area'];
+        droneDisplayNames.forEach(displayName => {
+            if (map.getLayer(displayName)) {
+                map.on('click', displayName, (e) => {
+                    const props = e.features[0].properties;
+                    const imageUrl = props.PhotoURL_1;
+                    
+                    let html = `<h3>Drone Imagery</h3>`;
+                    if (imageUrl) {
+                        html += `<img src="${imageUrl}" style="width:100%; height:auto; border-radius:4px; margin-bottom:8px;">`;
+                    } else {
+                        html += `<p>No image available for this location.</p>`;
+                    }
+
+                    new mapboxgl.Popup()
+                        .setLngLat(e.lngLat)
+                        .setHTML(html)
+                        .addTo(map);
+                });
+
+                map.on('mouseenter', displayName, () => map.getCanvas().style.cursor = 'pointer');
+                map.on('mouseleave', displayName, () => map.getCanvas().style.cursor = '');
+            }
+        });
+    });
+
+    // Legend collapsible toggle
+    document.getElementById('legend-header').addEventListener('click', () => {
+        const content = document.getElementById('legend-content');
+        const header = document.getElementById('legend-header');
+        const isCollapsed = content.classList.toggle('collapsed');
+        header.textContent = isCollapsed ? 'Legend ▲' : 'Legend ▼';
+    });
+</script>
 </body>
 </html>
