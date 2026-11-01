@@ -236,7 +236,58 @@
         img.replaceWith(p);
     }
 
+    // Optional: paste a Google Drive API key here to show every image in a Drive FOLDER link.
+    // (Enable the Drive API in Google Cloud Console; restrict the key to your site's URL.)
+    const DRIVE_API_KEY = '';
+
+    function getDriveFolderId(raw) {
+        const s = String(raw || '');
+        const m = s.match(/drive\/(?:u\/\d+\/)?folders\/([\w-]+)/) || s.match(/folderview\?id=([\w-]+)/);
+        return m ? m[1] : null;
+    }
+
+    // Fills any folder placeholder in a popup with the folder's images
+    async function loadFolderPhotos(root) {
+        if (!root) return;
+        const box = root.querySelector('.folder-photos');
+        if (!box) return;
+        const folderId = box.dataset.folder;
+        const folderLink = `https://drive.google.com/drive/folders/${folderId}`;
+        if (!DRIVE_API_KEY) {
+            box.innerHTML = `<p>This pit links to a Drive <b>folder</b>, not an image file.<br>
+                <a href="${folderLink}" target="_blank" rel="noopener">Open folder</a></p>`;
+            return;
+        }
+        try {
+            const q = encodeURIComponent(`'${folderId}' in parents and mimeType contains 'image/' and trashed=false`);
+            const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&orderBy=name&pageSize=20&key=${DRIVE_API_KEY}`);
+            const data = await res.json();
+            if (!data.files || !data.files.length) {
+                box.innerHTML = `<p>No images found in this folder (is it shared as "Anyone with the link"?).<br>
+                    <a href="${folderLink}" target="_blank" rel="noopener">Open folder</a></p>`;
+                return;
+            }
+            box.innerHTML = '';
+            data.files.forEach(f => {
+                const img = document.createElement('img');
+                img.referrerPolicy = 'no-referrer';
+                img.title = f.name;
+                img.style.cssText = 'width:100%; height:auto; border-radius:4px; margin-bottom:8px;';
+                img.dataset.alts = encodeURIComponent(JSON.stringify([`https://lh3.googleusercontent.com/d/${f.id}=w1200`]));
+                img.dataset.original = encodeURIComponent(`https://drive.google.com/file/d/${f.id}/view`);
+                img.onerror = () => imgFallback(img);
+                img.src = `https://drive.google.com/thumbnail?id=${f.id}&sz=w1200`;
+                box.appendChild(img);
+            });
+        } catch (err) {
+            console.warn('Drive folder lookup failed:', err);
+            box.innerHTML = `<p>Could not load folder images.<br><a href="${folderLink}" target="_blank" rel="noopener">Open folder</a></p>`;
+        }
+    }
+
     function buildImageHtml(raw) {
+        const folderId = getDriveFolderId(raw);
+        if (folderId) return `<div class="folder-photos" data-folder="${folderId}">Loading photos…</div>`;
         const urls = getImageCandidates(raw);
         if (!urls.length) return `<p>No image available for this location.</p>`;
         console.log('Photo raw value:', raw, '-> candidates:', urls);
@@ -360,6 +411,26 @@ function toggleSubLayer() {
             }
         } catch (err) {
             console.warn('Could not add soil outline layer (skipping):', err);
+        }
+
+        // Layer order: put soil units (and outline) above the ortho + DSM, below everything else
+        try {
+            const rasterIds = [
+                'UAV-Derived Orthomosaic - 04-24-2026',
+                'UAV-Derived Digital Surface Model - 04-24-2026'
+            ];
+            const movable = [SOIL_LAYER_ID, 'grouped-polygons-outline'];
+            const order = map.getStyle().layers.map(l => l.id);
+            const topRaster = Math.max(...rasterIds.map(id => order.indexOf(id)));
+            if (topRaster >= 0 && map.getLayer(SOIL_LAYER_ID)) {
+                // First layer above the rasters that is not one of the layers being moved
+                const beforeId = order.slice(topRaster + 1).find(id => !movable.includes(id));
+                movable.forEach(id => {
+                    if (map.getLayer(id)) map.moveLayer(id, beforeId); // undefined beforeId = top of stack
+                });
+            }
+        } catch (err) {
+            console.warn('Could not reorder soil layers:', err);
         }
 
         // Diagnose / auto-detect the soil units layer once tiles have rendered
@@ -509,7 +580,8 @@ const vectorLayers = [
                 console.log('Soil pit clicked:', props);
 
                 const html = `<h3>Soil Pit Inspection</h3>` + buildImageHtml(imageUrl);
-                new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+                const popup = new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+                loadFolderPhotos(popup.getElement());
             });
 
             map.on('mouseenter', soilPitLayer, () => map.getCanvas().style.cursor = 'pointer');
