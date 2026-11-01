@@ -61,7 +61,7 @@
 </div>
 
 <div id="map-title">
-    Clarkrange Regional Business Park – Soil Mapping Project
+    Clarkrange Regional Business Park – Soil Mapping Project: Deliverable I
 </div>
 
 <div id="legend" class="map-legend">
@@ -450,6 +450,114 @@ function toggleSubLayer() {
             console.warn('Could not reorder soil layers:', err);
         }
 
+        // Helper: is a pit / drone point under the cursor? (they take priority over polygons)
+        const clickedPoint = (e) => {
+            const pl = [soilPitLayer, 'Drone Images', 'Highlighted Drone Images of Sub-Optimal Soil Area']
+                .filter(l => l && map.getLayer(l));
+            return pl.length > 0 && map.queryRenderedFeatures(e.point, { layers: pl }).length > 0;
+        };
+
+        // Soil unit hover highlight: soft white wash over the hovered polygon that pops in
+        try {
+            if (map.getLayer(SOIL_LAYER_ID) && !map.getSource('soil-unit-hover')) {
+                const emptyFC = { type: 'FeatureCollection', features: [] };
+                map.addSource('soil-unit-hover', { type: 'geojson', data: emptyFC });
+
+                // Sit just above the soil units + outline, below all other overlays
+                const ids = map.getStyle().layers.map(l => l.id);
+                const topSoil = Math.max(ids.indexOf(SOIL_LAYER_ID), ids.indexOf('grouped-polygons-outline'));
+                const aboveId = ids[topSoil + 1]; // undefined = top of stack
+                map.addLayer({
+                    id: 'soil-unit-hover-fill',
+                    type: 'fill',
+                    source: 'soil-unit-hover',
+                    paint: { 'fill-color': '#FFFFFF', 'fill-opacity': 0, 'fill-antialias': false }
+                }, aboveId);
+
+                const SOIL_HOVER_OPACITY = 0.3;
+                const SOIL_POP_MS = 220;
+                let hoveredSoilKey = null;
+                let soilFrame = null;
+                const easeOutBack = (t) => 1 + 2.9 * Math.pow(t - 1, 3) + 1.9 * Math.pow(t - 1, 2);
+
+                const popSoil = () => {
+                    cancelAnimationFrame(soilFrame);
+                    const start = performance.now();
+                    const step = (now) => {
+                        const t = Math.min((now - start) / SOIL_POP_MS, 1);
+                        map.setPaintProperty('soil-unit-hover-fill', 'fill-opacity', SOIL_HOVER_OPACITY * easeOutBack(t));
+                        if (t < 1) soilFrame = requestAnimationFrame(step);
+                    };
+                    soilFrame = requestAnimationFrame(step);
+                };
+
+                const clearSoilHover = () => {
+                    cancelAnimationFrame(soilFrame);
+                    hoveredSoilKey = null;
+                    map.getSource('soil-unit-hover').setData(emptyFC);
+                    map.setPaintProperty('soil-unit-hover-fill', 'fill-opacity', 0);
+                };
+
+                map.on('mousemove', SOIL_LAYER_ID, (e) => {
+                    if (!e.features.length) return;
+                    if (clickedPoint(e)) { clearSoilHover(); return; } // pit/drone point wins
+                    map.getCanvas().style.cursor = 'pointer';
+
+                    const key = JSON.stringify(e.features[0].properties);
+                    if (key === hoveredSoilKey) return; // same polygon: don't restart the pop
+                    hoveredSoilKey = key;
+
+                    // Polygons get cut at tile edges, so gather every visible piece of this polygon
+                    let pieces = map.queryRenderedFeatures({ layers: [SOIL_LAYER_ID] })
+                        .filter(f => JSON.stringify(f.properties) === key);
+                    if (!pieces.length) pieces = [e.features[0]];
+
+                    map.getSource('soil-unit-hover').setData({
+                        type: 'FeatureCollection',
+                        features: pieces.map(f => ({ type: 'Feature', properties: {}, geometry: f.geometry }))
+                    });
+                    popSoil();
+                });
+
+                map.on('mouseleave', SOIL_LAYER_ID, () => {
+                    map.getCanvas().style.cursor = '';
+                    clearSoilHover();
+                });
+            }
+        } catch (err) {
+            console.warn('Could not set up soil unit hover:', err);
+        }
+
+        // Soil unit click popup: only Layer, Acreage and Group
+        if (map.getLayer(SOIL_LAYER_ID)) {
+            map.on('click', SOIL_LAYER_ID, (e) => {
+                if (clickedPoint(e)) return; // a pit/drone point was clicked, not the polygon
+                const props = e.features[0].properties;
+                console.log('Soil unit clicked:', props);
+
+                const findKey = (re) => Object.keys(props).find(k => re.test(k));
+                const layerKey = findKey(/^layer$/i);
+                const acreKey = findKey(/acre/i);
+                const groupKey = (props[SOIL_PROPERTY_KEY] !== undefined) ? SOIL_PROPERTY_KEY : findKey(/^group$/i);
+
+                const layerVal = layerKey ? props[layerKey] : 'Mapped Soil Units';
+                let acreVal = acreKey ? props[acreKey] : null;
+                if (acreVal !== null && acreVal !== '' && !isNaN(parseFloat(acreVal))) {
+                    acreVal = parseFloat(acreVal).toFixed(2);
+                }
+                const groupVal = groupKey ? props[groupKey] : null;
+
+                const rows = [['Layer', layerVal], ['Acreage', acreVal], ['Group', groupVal]]
+                    .filter(([, v]) => v !== null && v !== undefined && v !== '');
+                if (!acreKey) console.warn('[soil] no acreage field found; fields are:', Object.keys(props));
+
+                let html = `<h3>Mapped Soil Units</h3><table class="popup-table">`;
+                rows.forEach(([k, v]) => { html += `<tr><td>${k}</td><td>${v}</td></tr>`; });
+                html += `</table>`;
+                new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+            });
+        }
+
         // Diagnose / auto-detect the soil units layer once tiles have rendered
         map.once('idle', () => {
             if (!map.getLayer(SOIL_LAYER_ID)) {
@@ -530,7 +638,6 @@ function toggleSubLayer() {
 
         // Popup clicks
 const vectorLayers = [
-    SOIL_LAYER_ID, // resolved above
     'Test Soil Area',
     'Hydric Soil Area',
     'Sub-Optimal Soil Area',
