@@ -138,7 +138,7 @@
         <label class="toggle-item"><input type="checkbox" id="chk-stream" checked onchange="toggleLayer('Stream', this)"><span class="legend-key line" style="background-color: #017bf2;"></span>Stream</label>
         <label class="toggle-item"><input type="checkbox" id="chk-buffer" checked onchange="toggleLayer('25ft Buffer Around Water Bodies', this)"><span class="legend-key" style="background-color: #54a2cf; opacity: 0.4;"></span>25ft Water Buffer</label>
         <label class="toggle-item"><input type="checkbox" id="chk-waterbody" checked onchange="toggleLayer('Water Body', this)"><span class="legend-key" style="background-color: #5da8fe;"></span>Water Body</label>
-        <label class="toggle-item"><input type="checkbox" id="chk-contours" checked onchange="toggleGroup(['5ft Interval Contours', 'UAV-Derived Contour Labels - 04-24-2026'], this)"><span class="legend-key line" style="background-color: #000000;"></span>5ft Interval Contours</label>
+        <label class="toggle-item"><input type="checkbox" id="chk-contours" checked onchange="toggleGroup(['5ft Interval Contours', 'Contour Labels'], this)"><span class="legend-key line" style="background-color: #000000;"></span>5ft Interval Contours</label>
         <label class="toggle-item"><input type="checkbox" id="chk-parcels" checked onchange="toggleLayer('Surrounding Parcels', this)"><span class="legend-key line" style="background-color: #ffffff; border-style: dashed;"></span>Surrounding Parcels</label>
         <label class="toggle-item"><input type="checkbox" id="chk-boulder" checked onchange="toggleLayer('Boulder', this)"><span class="legend-key caret">^</span>Boulder</label>
 
@@ -152,7 +152,7 @@
             <span class="legend-key point" style="background-color:#FFD700; border: 1px solid #FF8C00;"></span>Highlighted Drone Images
         </label>
         <label class="toggle-item">
-    <input type="checkbox" id="chk-soil-pits" checked onchange="toggleLayer('soil-pits-with-images', this)">
+    <input type="checkbox" id="chk-soil-pits" checked onchange="toggleSoilPits(this)">
     <span class="legend-key point" style="background-color: #FFFFFF;"></span>Soil Pits
     </label>
     </div>
@@ -186,11 +186,27 @@
         });
     }
 
+    // Find the soil pits layer no matter how it is named in Mapbox Studio
+    // (e.g. 'soil-pits-with-images' or 'Soil Pits with Images')
+    function getSoilPitLayerId() {
+        const exact = ['soil-pits-with-images', 'Soil Pits with Images'].find(id => map.getLayer(id));
+        if (exact) return exact;
+        const layers = (map.getStyle() && map.getStyle().layers) || [];
+        const guess = layers.find(l => /soil[\s_-]*pits?/i.test(l.id));
+        return guess ? guess.id : null;
+    }
+
+    function toggleSoilPits(checkboxElement) {
+        const id = getSoilPitLayerId();
+        if (!id) { console.warn('Soil pits layer not found'); return; }
+        map.setLayoutProperty(id, 'visibility', checkboxElement.checked ? 'visible' : 'none');
+    }
+
     // Target layer name from Mapbox Studio
-const SOIL_LAYER_ID = 'Mapped Soil Units';
+const SOIL_LAYER_ID = 'mapped-soil-units';
 
 // The property column in your vector data (change 'group' if your attribute is named differently)
-const SOIL_PROPERTY_KEY = 'group';
+let SOIL_PROPERTY_KEY = 'group'; // auto-corrected on load if the data uses a different field
 
 // Master toggle: shows/hides all or resets filter
 function toggleMasterSoil(masterElement) {
@@ -252,43 +268,51 @@ function toggleSubLayer() {
     // --- MAP ON LOAD ---
 
     map.on('load', () => {
-        // Look for the source. If it is already loaded in your Studio style as 'Mapped Soil Units', use it;
-        // otherwise add the fallback GeoJSON source.
-        let soilSourceId = 'Mapped Soil Units';
-        if (!map.getSource(soilSourceId)) {
-            soilSourceId = 'soil-zones';
-            if (!map.getSource(soilSourceId)) {
-                map.addSource(soilSourceId, {
-                    type: 'geojson',
-                    data: './soil_zones.geojson'
-                });
-            }
-        }
+        const soilPitLayer = getSoilPitLayerId();
+        console.log('Soil pits layer id:', soilPitLayer);
 
-        const soilUnits = [
-            { id: 'soil-tilsit', name: 'Tilsit', color: '#8fc492' },
-            { id: 'soil-alticrest', name: 'Alticrest', color: '#75ad79' },
-            { id: 'soil-alticrestu', name: 'Alticrest Unsuitable', color: '#c97878' },
-            { id: 'soil-hartsells', name: 'Hartsells', color: '#5e9474' },
-            { id: 'soil-setback', name: 'Setback', color: '#a6c9e2' },
-            { id: 'soil-ramsey', name: 'Ramsey', color: '#a85f65' },
-            { id: 'soil-lily', name: 'Lily', color: '#a8b86d' },
-            { id: 'soil-slope', name: 'Slope', color: '#ad3640' },
-            { id: 'soil-lilyu', name: 'LilyU', color: '#d4a080' },
-            { id: 'soil-unmapped', name: 'Unmapped', color: '#d9d9d9' }
-        ];
-
-        if (!map.getLayer('grouped-polygons-outline')) {
-            map.addLayer({
+        // Soil unit outline: only added if it isn't already in the style,
+        // and it reuses the same source as the 'mapped-soil-units' layer
+        const soilLayer = map.getLayer(SOIL_LAYER_ID);
+        if (soilLayer && !map.getLayer('grouped-polygons-outline')) {
+            const outline = {
                 id: 'grouped-polygons-outline',
                 type: 'line',
-                source: soilSourceId,
-                paint: {
-                    'line-color': '#333333',
-                    'line-width': 1.0
-                }
-            });
+                source: soilLayer.source,
+                paint: { 'line-color': '#333333', 'line-width': 1.0 }
+            };
+            if (soilLayer.sourceLayer) outline['source-layer'] = soilLayer.sourceLayer;
+            map.addLayer(outline, soilPitLayer || undefined);
         }
+
+        // Diagnose / auto-detect the soil units layer once tiles have rendered
+        map.once('idle', () => {
+            if (!map.getLayer(SOIL_LAYER_ID)) {
+                console.warn(`[soil] layer "${SOIL_LAYER_ID}" not found`);
+                return;
+            }
+            const feats = map.queryRenderedFeatures({ layers: [SOIL_LAYER_ID] });
+            console.log('[soil] visibility:', map.getLayoutProperty(SOIL_LAYER_ID, 'visibility'),
+                        '| filter:', JSON.stringify(map.getFilter(SOIL_LAYER_ID)),
+                        '| features rendered:', feats.length);
+            if (!feats.length) {
+                console.warn('[soil] nothing rendered: layer is hidden, filtered out, or outside its zoom range');
+                return;
+            }
+            const legendVals = new Set([...document.querySelectorAll('.sub-soil-chk')].map(cb => cb.value));
+            let bestKey = SOIL_PROPERTY_KEY, bestHits = -1;
+            Object.keys(feats[0].properties).forEach(k => {
+                const hits = feats.filter(f => legendVals.has(String(f.properties[k]))).length;
+                if (hits > bestHits) { bestHits = hits; bestKey = k; }
+            });
+            if (bestHits > 0 && bestKey !== SOIL_PROPERTY_KEY) {
+                console.log(`[soil] using property "${bestKey}" instead of "${SOIL_PROPERTY_KEY}"`);
+                SOIL_PROPERTY_KEY = bestKey;
+            }
+            const distinct = [...new Set(feats.map(f => f.properties[SOIL_PROPERTY_KEY]))];
+            console.log(`[soil] values in "${SOIL_PROPERTY_KEY}":`, distinct,
+                        '| not in legend:', distinct.filter(v => !legendVals.has(String(v))));
+        });
 
         // Hover configs
         const hoverConfigs = [
@@ -297,13 +321,13 @@ function toggleSubLayer() {
             { layerId: 'Sub-Optimal Soil Area', stateKey: 'Highlight Color Sub-Opt SA' },
             { layerId: 'Hydric Soil Area', stateKey: 'Highlight Color Hydric SA' },
             { layerId: 'Test Soil Area', stateKey: 'Highlight Color Test SA' },
-            { layerId: 'soil-pits-with-images', stateKey: 'Highlight Color Soil Pits' }
+            { layerId: soilPitLayer, stateKey: 'Highlight Color Soil Pits' }
         ];
 
         const activeFeatures = {};
 
         hoverConfigs.forEach(config => {
-            if (!map.getLayer(config.layerId)) return;
+            if (!config.layerId || !map.getLayer(config.layerId)) return;
 
             map.on('mousemove', config.layerId, (e) => {
                 if (!e.features.length) return;
@@ -341,8 +365,7 @@ function toggleSubLayer() {
 
         // Popup clicks
 const vectorLayers = [
-    'Mapped Soil Units', // Studio layer ID
-    'Soil Pits with Images', // Studio layer ID
+    'mapped-soil-units', // Studio layer ID
     'Test Soil Area',
     'Hydric Soil Area',
     'Sub-Optimal Soil Area',
@@ -357,6 +380,11 @@ const vectorLayers = [
         vectorLayers.forEach(layerId => {
             if (map.getLayer(layerId)) {
                 map.on('click', layerId, (e) => {
+                    // Don't also open a polygon popup if a pit/drone point was clicked
+                    const pointLayers = [soilPitLayer, 'Drone Images', 'Highlighted Drone Images of Sub-Optimal Soil Area']
+                        .filter(l => l && map.getLayer(l));
+                    if (pointLayers.length && map.queryRenderedFeatures(e.point, { layers: pointLayers }).length) return;
+
                     const props = e.features[0].properties;
                     let html = `<h3>${layerId}</h3><table class="popup-table">`;
                     for (const [k, v] of Object.entries(props)) {
@@ -391,28 +419,34 @@ const vectorLayers = [
             }
         });
 
+        // Soil Pits imagery clicks (must live inside map.on('load') so the layer exists)
+        if (soilPitLayer) {
+            map.on('click', soilPitLayer, (e) => {
+                const props = e.features[0].properties;
+                // Use PhotoURL_1 if present, otherwise any property that looks like a photo/image URL
+                let imageUrl = props.PhotoURL_1;
+                if (!imageUrl) {
+                    const key = Object.keys(props).find(k => /photo|image|url/i.test(k) && props[k]);
+                    if (key) imageUrl = props[key];
+                }
+                console.log('Soil pit clicked:', props);
+
+                let html = `<h3>Soil Pit Inspection</h3>`;
+                if (imageUrl) {
+                    html += `<img src="${imageUrl}" style="width:100%; height:auto; border-radius:4px; margin-bottom:8px;">`;
+                } else {
+                    html += `<p>No image available for this location.</p>`;
+                }
+                new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+            });
+
+            map.on('mouseenter', soilPitLayer, () => map.getCanvas().style.cursor = 'pointer');
+            map.on('mouseleave', soilPitLayer, () => map.getCanvas().style.cursor = '');
+        } else {
+            console.warn('Soil pits layer not found - check the layer name in Mapbox Studio');
+        }
+
     });
-
-    // Soil Pits imagery clicks
-    const soilPitLayer = 'soil-pits-with-images';
-    if (map.getLayer(soilPitLayer)) {
-        map.on('click', soilPitLayer, (e) => {
-            const props = e.features[0].properties;
-            const imageUrl = props.PhotoURL_1; // Change if your property key is different (e.g., props.image_url)
-            
-            let html = `<h3>Soil Pit Inspection</h3>`;
-            if (imageUrl) {
-                html += `<img src="${imageUrl}" style="width:100%; height:auto; border-radius:4px; margin-bottom:8px;">`;
-            } else {
-                html += `<p>No image available for this location.</p>`;
-            }
-
-            new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
-        });
-
-        map.on('mouseenter', soilPitLayer, () => map.getCanvas().style.cursor = 'pointer');
-        map.on('mouseleave', soilPitLayer, () => map.getCanvas().style.cursor = '');
-    }
 
     // Accordion toggle
     const legendHeader = document.getElementById('legend-header');
