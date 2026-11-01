@@ -186,6 +186,13 @@
         });
     }
 
+    // Some links are a folder URL with the file ID glued onto the end:
+    //   https://drive.google.com/drive/folders/XXXX?usp=drive_link<FILE_ID>
+    function getGluedFileId(raw) {
+        const m = String(raw || '').trim().match(/\?usp=[a-z_]*drive_link([\w-]{20,})\s*$/i);
+        return m ? m[1] : null;
+    }
+
     // Turn whatever is stored in the photo field into a list of image URLs to try, best first
     function getImageCandidates(raw) {
         if (!raw) return [];
@@ -197,6 +204,15 @@
             } catch (err) { /* leave as is */ }
         }
         url = url.replace(/^http:\/\//i, 'https://');
+
+        const gluedId = getGluedFileId(url);
+        if (gluedId) {
+            return [
+                `https://drive.google.com/thumbnail?id=${gluedId}&sz=w1200`,
+                `https://lh3.googleusercontent.com/d/${gluedId}=w1200`,
+                `https://drive.google.com/uc?export=view&id=${gluedId}`
+            ];
+        }
 
         // Google Drive: file/d/ID, open?id=ID, uc?id=ID, or any ?id=ID on a google domain
         if (/google\.com|googleusercontent\.com/.test(url)) {
@@ -242,6 +258,7 @@
 
     function getDriveFolderId(raw) {
         const s = String(raw || '');
+        if (getGluedFileId(s)) return null; // actually a file link, not a folder
         const m = s.match(/drive\/(?:u\/\d+\/)?folders\/([\w-]+)/) || s.match(/folderview\?id=([\w-]+)/);
         return m ? m[1] : null;
     }
