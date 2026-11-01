@@ -186,6 +186,67 @@
         });
     }
 
+    // Turn whatever is stored in the photo field into a list of image URLs to try, best first
+    function getImageCandidates(raw) {
+        if (!raw) return [];
+        let url = String(raw).trim();
+        if (url.startsWith('[') || url.startsWith('{')) {   // JSON array/object stored as text
+            try {
+                const parsed = JSON.parse(url);
+                url = Array.isArray(parsed) ? String(parsed[0]) : String(Object.values(parsed)[0]);
+            } catch (err) { /* leave as is */ }
+        }
+        url = url.replace(/^http:\/\//i, 'https://');
+
+        // Google Drive: file/d/ID, open?id=ID, uc?id=ID, or any ?id=ID on a google domain
+        if (/google\.com|googleusercontent\.com/.test(url)) {
+            const m = url.match(/\/d\/([\w-]{15,})/) || url.match(/[?&]id=([\w-]{15,})/);
+            if (m) {
+                const id = m[1];
+                return [
+                    `https://drive.google.com/thumbnail?id=${id}&sz=w1200`,
+                    `https://lh3.googleusercontent.com/d/${id}=w1200`,
+                    `https://drive.google.com/uc?export=view&id=${id}`
+                ];
+            }
+        }
+        if (/dropbox\.com/.test(url)) {
+            url = url.replace(/[?&]dl=0/, '');
+            url += (url.includes('?') ? '&' : '?') + 'raw=1';
+        }
+        const imgur = url.match(/^https:\/\/imgur\.com\/(\w+)$/);
+        if (imgur) return [`https://i.imgur.com/${imgur[1]}.jpg`];
+        try { return [encodeURI(decodeURI(url))]; } catch (err) { return [url]; }
+    }
+
+    // Called by an <img> when it fails: try the next candidate, otherwise show a link
+    function imgFallback(img) {
+        const alts = JSON.parse(decodeURIComponent(img.dataset.alts || '[]'));
+        if (alts.length) {
+            img.dataset.alts = encodeURIComponent(JSON.stringify(alts.slice(1)));
+            img.src = alts[0];
+            return;
+        }
+        const original = decodeURIComponent(img.dataset.original || '');
+        const p = document.createElement('p');
+        p.innerHTML = 'Image could not be loaded. Check that the file is shared as "Anyone with the link".<br>';
+        const a = document.createElement('a');
+        a.href = original; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Open original link';
+        p.appendChild(a);
+        img.replaceWith(p);
+    }
+
+    function buildImageHtml(raw) {
+        const urls = getImageCandidates(raw);
+        if (!urls.length) return `<p>No image available for this location.</p>`;
+        console.log('Photo raw value:', raw, '-> candidates:', urls);
+        return `<img src="${urls[0]}" referrerpolicy="no-referrer"
+                     data-alts="${encodeURIComponent(JSON.stringify(urls.slice(1)))}"
+                     data-original="${encodeURIComponent(String(raw).trim())}"
+                     onerror="imgFallback(this)"
+                     style="width:100%; height:auto; border-radius:4px; margin-bottom:8px;">`;
+    }
+
     // Find the soil pits layer no matter how it is named in Mapbox Studio
     // (e.g. 'soil-pits-with-images' or 'Soil Pits with Images')
     function getSoilPitLayerId() {
@@ -203,7 +264,16 @@
     }
 
     // Target layer name from Mapbox Studio
-const SOIL_LAYER_ID = 'mapped-soil-units';
+let SOIL_LAYER_ID = 'mapped-soil-units'; // auto-resolved on load (also matches 'Mapped Soil Units')
+
+// Find the soil units layer however it is spelled in the style
+function getSoilLayerId() {
+    const exact = ['mapped-soil-units', 'Mapped Soil Units'].find(id => map.getLayer(id));
+    if (exact) return exact;
+    const layers = (map.getStyle() && map.getStyle().layers) || [];
+    const guess = layers.find(l => /mapped[\s_-]*soil/i.test(l.id));
+    return guess ? guess.id : null;
+}
 
 // The property column in your vector data (change 'group' if your attribute is named differently)
 let SOIL_PROPERTY_KEY = 'group'; // auto-corrected on load if the data uses a different field
@@ -268,6 +338,9 @@ function toggleSubLayer() {
     // --- MAP ON LOAD ---
 
     map.on('load', () => {
+        console.log('All layer ids:', map.getStyle().layers.map(l => l.id));
+        SOIL_LAYER_ID = getSoilLayerId() || SOIL_LAYER_ID;
+        console.log('Soil units layer id:', SOIL_LAYER_ID, '| exists:', !!map.getLayer(SOIL_LAYER_ID));
         const soilPitLayer = getSoilPitLayerId();
         console.log('Soil pits layer id:', soilPitLayer);
 
@@ -365,7 +438,7 @@ function toggleSubLayer() {
 
         // Popup clicks
 const vectorLayers = [
-    'mapped-soil-units', // Studio layer ID
+    SOIL_LAYER_ID, // resolved above
     'Test Soil Area',
     'Hydric Soil Area',
     'Sub-Optimal Soil Area',
@@ -431,12 +504,7 @@ const vectorLayers = [
                 }
                 console.log('Soil pit clicked:', props);
 
-                let html = `<h3>Soil Pit Inspection</h3>`;
-                if (imageUrl) {
-                    html += `<img src="${imageUrl}" style="width:100%; height:auto; border-radius:4px; margin-bottom:8px;">`;
-                } else {
-                    html += `<p>No image available for this location.</p>`;
-                }
+                const html = `<h3>Soil Pit Inspection</h3>` + buildImageHtml(imageUrl);
                 new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
             });
 
