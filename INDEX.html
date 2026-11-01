@@ -151,6 +151,10 @@
             <input type="checkbox" id="chk-drone-images-highlighted" checked onchange="toggleLayer('Highlighted Drone Images of Sub-Optimal Soil Area', this)">
             <span class="legend-key point" style="background-color:#FFD700; border: 1px solid #FF8C00;"></span>Highlighted Drone Images
         </label>
+        <label class="toggle-item">
+    <input type="checkbox" id="chk-soil-pits" checked onchange="toggleLayer('soil-pits-with-images', this)">
+    <span class="legend-key point" style="background-color: #FFFFFF;"></span>Soil Pits
+    </label>
     </div>
 </div>
 
@@ -337,6 +341,7 @@ function toggleSubLayer() {
         // Popup clicks
 const vectorLayers = [
     'Mapped Soil Units', // Studio layer ID
+    'Soil Pits with Images', // Studio layer ID
     'Test Soil Area',
     'Hydric Soil Area',
     'Sub-Optimal Soil Area',
@@ -386,6 +391,27 @@ const vectorLayers = [
         });
 
     });
+
+    // Soil Pits imagery clicks
+    const soilPitLayer = 'soil-pits-with-images';
+    if (map.getLayer(soilPitLayer)) {
+        map.on('click', soilPitLayer, (e) => {
+            const props = e.features[0].properties;
+            const imageUrl = props.PhotoURL_1; // Change if your property key is different (e.g., props.image_url)
+            
+            let html = `<h3>Soil Pit Inspection</h3>`;
+            if (imageUrl) {
+                html += `<img src="${imageUrl}" style="width:100%; height:auto; border-radius:4px; margin-bottom:8px;">`;
+            } else {
+                html += `<p>No image available for this location.</p>`;
+            }
+
+            new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+        });
+
+        map.on('mouseenter', soilPitLayer, () => map.getCanvas().style.cursor = 'pointer');
+        map.on('mouseleave', soilPitLayer, () => map.getCanvas().style.cursor = '');
+    }
 
     // Accordion toggle
     const legendHeader = document.getElementById('legend-header');
