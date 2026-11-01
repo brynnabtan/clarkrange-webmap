@@ -344,18 +344,22 @@ function toggleSubLayer() {
         const soilPitLayer = getSoilPitLayerId();
         console.log('Soil pits layer id:', soilPitLayer);
 
-        // Soil unit outline: only added if it isn't already in the style,
-        // and it reuses the same source as the 'mapped-soil-units' layer
-        const soilLayer = map.getLayer(SOIL_LAYER_ID);
-        if (soilLayer && !map.getLayer('grouped-polygons-outline')) {
-            const outline = {
-                id: 'grouped-polygons-outline',
-                type: 'line',
-                source: soilLayer.source,
-                paint: { 'line-color': '#333333', 'line-width': 1.0 }
-            };
-            if (soilLayer.sourceLayer) outline['source-layer'] = soilLayer.sourceLayer;
-            map.addLayer(outline, soilPitLayer || undefined);
+        // Soil unit outline: only added if it isn't already in the style.
+        // Reads source / source-layer from the style definition of the soil layer.
+        try {
+            const soilDef = map.getStyle().layers.find(l => l.id === SOIL_LAYER_ID);
+            if (soilDef && !map.getLayer('grouped-polygons-outline')) {
+                const outline = {
+                    id: 'grouped-polygons-outline',
+                    type: 'line',
+                    source: soilDef.source,
+                    paint: { 'line-color': '#333333', 'line-width': 1.0 }
+                };
+                if (soilDef['source-layer']) outline['source-layer'] = soilDef['source-layer'];
+                map.addLayer(outline, soilPitLayer || undefined);
+            }
+        } catch (err) {
+            console.warn('Could not add soil outline layer (skipping):', err);
         }
 
         // Diagnose / auto-detect the soil units layer once tiles have rendered
