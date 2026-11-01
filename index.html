@@ -82,9 +82,6 @@
         </label>
 
         <div class="legend-section">Soil Assessment</div>
-        <label class="toggle-item"><input type="checkbox" id="chk-test-soil" checked onchange="toggleLayer('Test Soil Area', this)"><span class="legend-key" style="background-color: #23852a;"></span>Test Soil Area</label>
-        <label class="toggle-item"><input type="checkbox" id="chk-hydric-soil" checked onchange="toggleLayer('Hydric Soil Area', this)"><span class="legend-key" style="background-color: #53ccff;"></span>Hydric Soil Area</label>
-        <label class="toggle-item"><input type="checkbox" id="chk-suboptimal-soil" checked onchange="toggleLayer('Sub-Optimal Soil Area', this)"><span class="legend-key" style="background-color: #bb35b6;"></span>Sub-Optimal Soil Area</label>
 
         <!-- Master Soil Units Toggle -->
 <label class="toggle-item">
@@ -415,6 +412,11 @@ function toggleSubLayer() {
         const soilPitLayer = getSoilPitLayerId();
         console.log('Soil pits layer id:', soilPitLayer);
 
+        // Remove layers no longer wanted on the map
+        ['Test Soil Area', 'Hydric Soil Area', 'Sub-Optimal Soil Area'].forEach(id => {
+            if (map.getLayer(id)) map.removeLayer(id);
+        });
+
         // Soil unit outline: only added if it isn't already in the style.
         // Reads source / source-layer from the style definition of the soil layer.
         try {
@@ -592,9 +594,6 @@ function toggleSubLayer() {
         const hoverConfigs = [
             { layerId: '25ft Buffer Around Water Bodies', stateKey: 'Highlight Color Water' },
             { layerId: 'Drone Images', stateKey: 'Highlight Color Drone' },
-            { layerId: 'Sub-Optimal Soil Area', stateKey: 'Highlight Color Sub-Opt SA' },
-            { layerId: 'Hydric Soil Area', stateKey: 'Highlight Color Hydric SA' },
-            { layerId: 'Test Soil Area', stateKey: 'Highlight Color Test SA' },
             { layerId: soilPitLayer, stateKey: 'Highlight Color Soil Pits' }
         ];
 
@@ -639,9 +638,6 @@ function toggleSubLayer() {
 
         // Popup clicks
 const vectorLayers = [
-    'Test Soil Area',
-    'Hydric Soil Area',
-    'Sub-Optimal Soil Area',
     '25ft Buffer Around Water Bodies',
     'Water Body',
     'Boulder',
