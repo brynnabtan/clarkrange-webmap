@@ -601,8 +601,80 @@ const vectorLayers = [
                 loadFolderPhotos(popup.getElement());
             });
 
-            map.on('mouseenter', soilPitLayer, () => map.getCanvas().style.cursor = 'pointer');
-            map.on('mouseleave', soilPitLayer, () => map.getCanvas().style.cursor = '');
+            // Hover highlight: a glowing ring drawn around whichever pit is under the cursor.
+            // Uses its own GeoJSON source, so it needs no feature IDs or Studio style settings.
+            if (!map.getSource('soil-pit-hover')) {
+                map.addSource('soil-pit-hover', {
+                    type: 'geojson',
+                    data: { type: 'FeatureCollection', features: [] }
+                });
+            }
+            if (!map.getLayer('soil-pit-hover-ring')) {
+                map.addLayer({
+                    id: 'soil-pit-hover-ring',
+                    type: 'circle',
+                    source: 'soil-pit-hover',
+                    paint: {
+                        'circle-radius': 0,
+                        'circle-color': '#FFFFFF',
+                        'circle-opacity': 0.35,
+                        'circle-blur': 0.6,
+                        'circle-stroke-color': '#FFFFFF',
+                        'circle-stroke-width': 2,
+                        'circle-stroke-opacity': 0.9
+                    }
+                });
+            }
+            const hoverSrc = () => map.getSource('soil-pit-hover');
+            const HALO_RADIUS = 12;       // final halo size (px)
+            const POP_DURATION = 240;     // ms
+            let hoveredKey = null;
+            let popFrame = null;
+
+            // ease-out-back: grows past its final size a touch, then settles (the "pop")
+            const easeOutBack = (t) => {
+                const c1 = 1.9, c3 = c1 + 1;
+                return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+            };
+
+            function popHalo() {
+                cancelAnimationFrame(popFrame);
+                const start = performance.now();
+                const step = (now) => {
+                    const t = Math.min((now - start) / POP_DURATION, 1);
+                    const k = easeOutBack(t);
+                    map.setPaintProperty('soil-pit-hover-ring', 'circle-radius', Math.max(HALO_RADIUS * k, 0));
+                    map.setPaintProperty('soil-pit-hover-ring', 'circle-opacity', 0.35 * Math.min(t * 2, 1));
+                    map.setPaintProperty('soil-pit-hover-ring', 'circle-stroke-opacity', 0.9 * Math.min(t * 2, 1));
+                    if (t < 1) popFrame = requestAnimationFrame(step);
+                };
+                popFrame = requestAnimationFrame(step);
+            }
+
+            function clearPitHover() {
+                cancelAnimationFrame(popFrame);
+                hoveredKey = null;
+                hoverSrc().setData({ type: 'FeatureCollection', features: [] });
+                map.setPaintProperty('soil-pit-hover-ring', 'circle-radius', 0);
+            }
+
+            map.on('mousemove', soilPitLayer, (e) => {
+                if (!e.features.length) return;
+                map.getCanvas().style.cursor = 'pointer';
+                const geom = e.features[0].geometry;
+                const key = JSON.stringify(geom.coordinates);
+                if (key === hoveredKey) return;   // same pit: don't restart the pop
+                hoveredKey = key;
+                hoverSrc().setData({
+                    type: 'FeatureCollection',
+                    features: [{ type: 'Feature', properties: {}, geometry: geom }]
+                });
+                popHalo();
+            });
+            map.on('mouseleave', soilPitLayer, () => {
+                map.getCanvas().style.cursor = '';
+                clearPitHover();
+            });
         } else {
             console.warn('Soil pits layer not found - check the layer name in Mapbox Studio');
         }
