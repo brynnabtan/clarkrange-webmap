@@ -39,7 +39,10 @@
         #map-title {
             position: absolute;
             top: 20px;
-            left: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            white-space: nowrap;
             font-family: 'Helvetica Neue', Arial, sans-serif;
             font-size: 20px;
             font-weight: 600;
@@ -61,7 +64,7 @@
 </div>
 
 <div id="map-title">
-    Clarkrange Regional Business Park – Soil Mapping Project: Deliverable I
+    Clarkrange Regional Business Park – Soil Mapping Project
 </div>
 
 <div id="legend" class="map-legend">
@@ -528,7 +531,7 @@ function toggleSubLayer() {
             console.warn('Could not set up soil unit hover:', err);
         }
 
-        // Soil unit click popup: only Layer, Acreage and Group
+        // Soil unit click popup: only Acreage and Group
         if (map.getLayer(SOIL_LAYER_ID)) {
             map.on('click', SOIL_LAYER_ID, (e) => {
                 if (clickedPoint(e)) return; // a pit/drone point was clicked, not the polygon
@@ -536,18 +539,16 @@ function toggleSubLayer() {
                 console.log('Soil unit clicked:', props);
 
                 const findKey = (re) => Object.keys(props).find(k => re.test(k));
-                const layerKey = findKey(/^layer$/i);
                 const acreKey = findKey(/acre/i);
                 const groupKey = (props[SOIL_PROPERTY_KEY] !== undefined) ? SOIL_PROPERTY_KEY : findKey(/^group$/i);
 
-                const layerVal = layerKey ? props[layerKey] : 'Mapped Soil Units';
                 let acreVal = acreKey ? props[acreKey] : null;
                 if (acreVal !== null && acreVal !== '' && !isNaN(parseFloat(acreVal))) {
                     acreVal = parseFloat(acreVal).toFixed(2);
                 }
                 const groupVal = groupKey ? props[groupKey] : null;
 
-                const rows = [['Layer', layerVal], ['Acreage', acreVal], ['Group', groupVal]]
+                const rows = [['Acreage', acreVal], ['Group', groupVal]]
                     .filter(([, v]) => v !== null && v !== undefined && v !== '');
                 if (!acreKey) console.warn('[soil] no acreage field found; fields are:', Object.keys(props));
 
